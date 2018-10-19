@@ -1,0 +1,85 @@
+#navul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #E6E6E6;
+}
+#left {
+    float: left;
+}
+#right {
+    float: right;
+}
+#navlia {
+    display: block;
+    color: black;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+#navlia:hover {
+    background-color: #D8D8D8;
+}
+table.borders {
+    border-collapse: collapse;
+}
+table.borders, table.borders tr, table.borders td {
+    border: 2px solid black;
+}
+table.borders td {
+    width: 30%;
+}
+
+@keyframes uploading {
+    from {color: black;}
+    to {color: red;}
+}
+
+#uploadstatus {
+    animation-name: uploading;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+#editmetadata {
+    float: left;
+    position: relative;
+    left: 10px;
+    display: none;
+}
+
+#filename {
+    position: relative;
+    top: 5px;
+    max-width: 228px;
+    word-wrap: break-word;
+    display: inline-block;
+}
+
+#uploadfiles {
+    display: inline;
+    float: right;
+    position: relative;
+    right: 10px;
+}
+
+.header-cell {
+    text-align: center;
+    height: 33px;
+}
+
+.content-cell {
+    vertical-align: top;
+    height: 500px;
+}
+
+.tree-list {
+    padding-left: 20px;
+    list-style-type: none;
+}
+
+.bottom-cell {
+    height: 33px;
+}

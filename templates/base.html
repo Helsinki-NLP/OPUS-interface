@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Opus Repository</title>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+  
+  <ul id="navul">
+    <li id="left"><a id="navlia" class="active" href="/">Home</a></li>
+    {% if session.logged_in %}
+    <li id="right"><a id="navlia" href="/logout">Logout</a></li>
+    <li id="right"><a id="navlia"><span id="username">{{ session.username }}</span></a></li>
+    {% else %}
+    <li id="right"><a id="navlia" href="/login">Login</a></li>
+    <li id="right"><a id="navlia" href="/register">Register</a></li>
+    {% endif %}
+  </ul>
+
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <ul class="flashes">
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endwith %}
+  
+{% block content %}{% endblock %}
+</body>
+</html>
