@@ -31,6 +31,13 @@ table.borders td {
     width: 30%;
 }
 
+.content-table {
+    clear: left;
+    margin: auto;
+    width: 90%;
+    word-break: break-all;
+}
+
 @keyframes uploading {
     from {color: black;}
     to {color: red;}
@@ -58,11 +65,16 @@ table.borders td {
     display: inline-block;
 }
 
-#uploadfiles {
+.header-button {
     display: inline;
     float: right;
     position: relative;
     right: 10px;
+}
+
+.header-next-to-button {
+    position: relative;
+    top: 5px;
 }
 
 .header-cell {
@@ -73,6 +85,11 @@ table.borders td {
 .content-cell {
     vertical-align: top;
     height: 500px;
+}
+
+.align-files-cell {
+    vertical-align: top;
+    height: 250px;
 }
 
 .tree-list {

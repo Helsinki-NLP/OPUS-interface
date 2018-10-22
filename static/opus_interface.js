@@ -4,13 +4,15 @@ function update_branch() {
     $("#monolingual").text("");
     $("#parallel").text("");
     $("#branch").val($("#choose-branch").val());
-    $.getJSON("https://vm1617.kaj.pouta.csc.fi/get_branch", {
+    $.getJSON("https://opus-repository.ling.helsinki.fi/get_branch", {
 	corpusname: $("#corpusname").text(),
 	branch: $("#choose-branch").val()
     }, function(data) {
 	subdir_to_list(data.uploads, "uploads");
 	subdir_to_list(data.monolingual, "monolingual");
 	subdir_to_list(data.parallel, "parallel");
+	subdir_to_list(data.monolingual, "align-source-files");
+	subdir_to_list(data.monolingual, "align-target-files");
     });
 }
 
@@ -34,7 +36,7 @@ function showMetadata(datapath) {
     $("#editmetadata").css("display", "none");
     let path = formulate_datapath(datapath);
     let inUploads = path.startsWith("/" + $("#corpusname").text() + "/" + $("#branch").val() + "/uploads/");
-    $.getJSON("https://vm1617.kaj.pouta.csc.fi/get_metadata", {
+    $.getJSON("https://opus-repository.ling.helsinki.fi/get_metadata", {
 	path: path
     }, function(data) {
 	$("#editmetadata").css("display", "inline");
@@ -86,7 +88,7 @@ function editMetadata(datapath) {
 		}
 	    }
 	    inputmn = 0;
-	    $.getJSON("https://vm1617.kaj.pouta.csc.fi/update_metadata", {
+	    $.getJSON("https://opus-repository.ling.helsinki.fi/update_metadata", {
 		changes: JSON.stringify(changedMetadata),
 		path: path
 	    }, function(data) {
@@ -109,7 +111,7 @@ function showFilecontent(datapath) {
     $("#file-content").text("");
     $("#editmetadata").css("display", "none");
     let path = formulate_datapath(datapath);
-    $.getJSON("https://vm1617.kaj.pouta.csc.fi/get_filecontent", {
+    $.getJSON("https://opus-repository.ling.helsinki.fi/get_filecontent", {
 	path: path
     }, function(data) {
 	$("#file-content").text(data.content);
@@ -118,7 +120,7 @@ function showFilecontent(datapath) {
 
 function importFile(datapath) {
     let path = formulate_datapath(datapath);
-    $.getJSON("https://vm1617.kaj.pouta.csc.fi/import_file", {
+    $.getJSON("https://opus-repository.ling.helsinki.fi/import_file", {
 	path: path
     }, function(data) {
 	$("#messages")[0].innerHTML = "";
@@ -131,7 +133,7 @@ function importFile(datapath) {
 function deleteFile(datapath, subdirname) {
     let path = formulate_datapath(datapath);
     if (confirm('Are you sure you want to delete "' + path + '"?')) {
-	$.getJSON("https://vm1617.kaj.pouta.csc.fi/delete_file", {
+	$.getJSON("https://opus-repository.ling.helsinki.fi/delete_file", {
 	    path: path
 	}, function(data) {
 	    $("#messages")[0].innerHTML = "";
@@ -150,10 +152,10 @@ function deleteFile(datapath, subdirname) {
 
 function downloadFile(datapath, filename) {
     let path = formulate_datapath(datapath);
-    window.location.href = "https://vm1617.kaj.pouta.csc.fi/download_file?path="+path+"&filename="+filename;
+    window.location.href = "https://opus-repository.ling.helsinki.fi/download_file?path="+path+"&filename="+filename;
     /*
     console.log(path, filename);
-    $.getJSON("https://vm1617.kaj.pouta.csc.fi/download_file", {
+    $.getJSON("https://opus-repository.ling.helsinki.fi/download_file", {
 	path: path,
 	filename: filename
     }, function(data) {
@@ -170,6 +172,7 @@ function subdir_to_list(directories, id_name){
 	let ptype = directories[i][1];
 	if (ptype == "dir") {
 	    $("#"+subdir).on("click", function() {
+		console.log(subdir);
 		open_or_close(subdir);
 	    });
 	} else if (ptype == "file"){
@@ -180,7 +183,7 @@ function subdir_to_list(directories, id_name){
 
 $("#searchcorpus").on("keyup", function() {
     if ($("#searchcorpus").val() != "") {
-	$.getJSON("https://vm1617.kaj.pouta.csc.fi/search", {
+	$.getJSON("https://opus-repository.ling.helsinki.fi/search", {
 	    corpusname: $("#searchcorpus").val()
 	}, function(data) {
 	    $("#searchresult")[0].innerHTML = "";
@@ -197,9 +200,9 @@ $("#clonebranch").on("click", function() {
     let corpusname = $("#corpusname").text();
     let branchclone = $("#choose-branch").val();
     let username = $("#username").text();
-    window.location.href = "https://vm1617.kaj.pouta.csc.fi/clone_branch?branch="+username+"&corpusname="+corpusname+"&branchclone="+branchclone;
+    window.location.href = "https://opus-repository.ling.helsinki.fi/clone_branch?branch="+username+"&corpusname="+corpusname+"&branchclone="+branchclone;
     /*
-    $.getJSON("https://vm1617.kaj.pouta.csc.fi/clone_branch", {
+    $.getJSON("https://opus-repository.ling.helsinki.fi/clone_branch", {
 	path: path
     }, function(data) {
 	console.log(data);
@@ -208,7 +211,7 @@ $("#clonebranch").on("click", function() {
 });
 
 function open_subdir(subdir) {
-    $.getJSON("https://vm1617.kaj.pouta.csc.fi/get_subdirs", {
+    $.getJSON("https://opus-repository.ling.helsinki.fi/get_subdirs", {
 	corpusname: $("#corpusname").text(),
 	branch: $("#choose-branch").val(),
 	subdir: "/"+subdir
@@ -283,7 +286,7 @@ function processFile(filename, path, root) {
 }
 
 function editAlignment(path) {
-    $.getJSON("https://vm1617.kaj.pouta.csc.fi/edit_alignment", {
+    $.getJSON("https://opus-repository.ling.helsinki.fi/edit_alignment", {
 	path: formulate_datapath(path)
     }, async function(data) {
 	$("#messages")[0].innerHTML = "";
@@ -354,6 +357,16 @@ $("#filedisplay-close").on("click", function() {
     } else if (tree == "parallel") {
 	showOrHideTrees("uploads", "monolingual", "", "show");
     }
+});
+
+$("#align-button").on("click", function() {
+    $("#file-structure-table").css("display", "none");
+    $("#align-selection-table").css("display", "");
+});
+
+$("#close-alignment").on("click", function() {
+    $("#align-selection-table").css("display", "none");
+    $("#file-structure-table").css("display", "");
 });
 
 let branch = decodeURIComponent(window.location.search.substring(1)).split("&")[0].split("=")[1];

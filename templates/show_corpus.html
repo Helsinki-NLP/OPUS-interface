@@ -27,7 +27,7 @@
   </div>
 </div>
 
-<table class="borders" style="clear: left; margin: auto; width: 90%; word-break: break-all">
+<table id="file-structure-table" class="borders content-table">
   <colgroup>
     <col id="uploads-column" span="1" style="width: 33.33%">
     <col id="monolingual-column" span="1" style="width: 33.33%">
@@ -36,17 +36,19 @@
   </colgroup>
   <tr>
     <td id="uploads-header-cell" class="uploads-cell header-cell">
-      <span style="position: relative; top: 5px">uploads</span>
-      <form id="uploadfiles" action="/upload_file">
+      <span class="header-next-to-button">uploads</span>
+      <form class="header-button" action="/upload_file">
 	<input type="text" name="corpus" value="{{ name }}" style="display: none">
 	<input id="branch" type="text" name="branch" value="{{ branch }}" style="display: none">
 	<input type="submit" value="+">
       </form>
     </td>
     <td id="monolingual-header-cell" class="monolingual-cell header-cell">monolingual</td>
-    <td id="parallel-header-cell" class="parallel-cell header-cell">parallel</td>
+    <td id="parallel-header-cell" class="parallel-cell header-cell">
+      <span class="header-next-to-button">parallel</span>
+      <button class="header-button" id="align-button">+</button>
+    </td>
     <td id="filedisplay-header-cell" class="filedisplay-cell header-cell" style="display: none">
-
       <button id="editmetadata" edit="false">edit metadata</button>
       <span id="filename"></span>
       <div style="display: inline; float: right; position: relative; right: 10px">
@@ -82,6 +84,25 @@
     <td id="monolingual-bottom-cell" class="monolingual-cell bottom-cell"></td>
     <td id="parallel-bottom-cell" class="parallel-cell bottom-cell"></td>
     <td id="filedisplay-bottom-cell" class="filedisplay-cell bottom-cell" style="display:none"></td>
+  </tr>
+</table>
+
+<table id="align-selection-table" class="borders content-table" style="display: none">
+  <tr><td class="header-cell" colspan="2">
+      <span class="header-next-to-button">alignment candidates</span>
+      <button id="close-alignment" class="header-button">close</button>
+      <button id="find-align-candidates" class="header-button">find</button>
+  </td></tr>
+  <tr><td colspan="2">1st</td></tr>
+  <tr>
+    <td class="align-files-cell">
+      <span style="padding-left: 20px">source files</span>
+      <ul id="align-source-files" class="tree-list"></ul>
+    </td>
+    <td class="align-files-cell">
+      <span style="padding-left: 20px">target files</span>
+      <ul id="align-target-files" class="tree-list"></ul>
+    </td>
   </tr>
 </table>
 

@@ -10,7 +10,7 @@ function go() {
 	$("#result").append('<button id="subdir">group</button>');
 	$("#result").append('<button id="subdir">storage</button>');
     } else {
-	$.getJSON("https://vm1617.kaj.pouta.csc.fi/letsmt", {
+	$.getJSON("https://opus-repository.ling.helsinki.fi/letsmt", {
 	    method: $("#method").val(),
 	    command: $("#command").val(),
 	    action: $("#action").val(),

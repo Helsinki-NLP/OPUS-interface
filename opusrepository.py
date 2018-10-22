@@ -383,6 +383,8 @@ def get_subdirs():
 
         subdir = subdir.replace("-_-", "/")
         subdir = subdir.replace("monolingual", "xml")
+        subdir = subdir.replace("align-source-files", "xml")
+        subdir = subdir.replace("align-target-files", "xml")
         subdir = subdir.replace("parallel", "xml")
 
         subdirContents = rh.get("/storage/"+corpusname+"/"+branch+subdir, {"uid": username})
