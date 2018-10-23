@@ -172,7 +172,6 @@ function subdir_to_list(directories, id_name){
 	let ptype = directories[i][1];
 	if (ptype == "dir") {
 	    $("#"+subdir).on("click", function() {
-		console.log(subdir);
 		open_or_close(subdir);
 	    });
 	} else if (ptype == "file"){

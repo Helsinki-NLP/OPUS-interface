@@ -84,7 +84,7 @@ table.borders td {
 
 .content-cell {
     vertical-align: top;
-    height: 500px;
+    height: 600px;
 }
 
 .align-files-cell {
@@ -99,4 +99,10 @@ table.borders td {
 
 .bottom-cell {
     height: 33px;
+}
+
+.scrollable {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
 }
