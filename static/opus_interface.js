@@ -220,14 +220,20 @@ function open_subdir(subdir) {
 	for (let i=0; i<subdirs.length; i++) {
 	    let subdir_id = subdir+"-_-"+subdirs[i][0]
 	    subdir_id = subdir_id.replace(/\./g, "-_DOT_-");
-	    subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none">'+subdirs[i][0]+'</li>';
 	    let ptype = subdirs[i][1];
 	    if (ptype == "dir") {
+		subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none">'+subdirs[i][0]+'</li>';
 		$(document).on("click", "#"+subdir_id, function() {
 		    open_or_close(subdir_id);
 		});
 	    } else if (ptype == "file") {
-		processFile(subdirs[i][0], subdir_id, subdir);
+		if (subdir.match("^align")) {
+		    subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><button id="'+subdir_id+'-align">+</button>'+subdirs[i][0]+'</li>';
+		    processAlignment(subdirs[i][0], subdir_id, subdir);
+		} else {
+		    subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none">'+subdirs[i][0]+'</li>';
+		    processFile(subdirs[i][0], subdir_id, subdir);
+		}
 	    }
 	}
 	
@@ -241,6 +247,48 @@ function open_subdir(subdir) {
     });
 }
 
+var sourcenum = 0;
+var targetnum = 0;
+var linenumber = 0;
+
+function processAlignment(filename, subdir_id, subdir) {
+    $(document).on("click", "#"+subdir_id+"-align", function() {
+	let name = subdir.replace(/-_-/g, "/").replace(/^.*?\//, "")+"/"+filename;
+	let soutar = "";
+	let num = -1;
+	if (subdir.match("^align-source-files")) {
+	    sourcenum += 1;
+	    num = sourcenum;
+	    soutar = "source";
+	} else if (subdir.match("^align-target-files")) {
+	    targetnum += 1;
+	    num = targetnum;
+	    soutar = "target";
+	}
+	console.log(sourcenum, targetnum, linenumber);
+	if (Math.max(sourcenum, targetnum) > linenumber) {
+	    linenumber += 1;
+	    $("#selected-align-files").append('<tr id="selected-align'+linenumber+'"> \
+<td id="delete-align-cell'+linenumber+'" style="width: 25%"><button id="delete-align-row-button'+linenumber+'">-</button></td> \
+<td id="source-align-cell'+linenumber+'" style="width: 25%"></td> \
+<td id="target-align-cell'+linenumber+'" style="width: 25%"></td> \
+<td id="align-button-cell'+linenumber+'" style="width: 25%"><input type="checkbox"><button>align</button></td> \
+</tr>');
+	    let deleteid = linenumber;
+	    $(document).on("click", "#delete-align-row-button"+linenumber, function() {
+		if ($("#source-align-cell"+deleteid).text() == "") {
+		    sourcenum += 1;
+		}
+		if ($("#target-align-cell"+deleteid).text() == "") {
+		    targetnum += 1;
+		}
+		$("#selected-align"+deleteid).remove();
+	    });
+	}
+	$("#"+soutar+"-align-cell"+num).text(name);
+    });
+}
+    
 function processFile(filename, path, root) {
     $(document).on("click", "#"+path, function() {
 	$("#editalignment").css("display", "none");

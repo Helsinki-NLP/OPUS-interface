@@ -101,15 +101,25 @@
       <button id="close-alignment" class="header-button">close</button>
       <button id="find-align-candidates" class="header-button">find</button>
   </td></tr>
-  <tr><td colspan="2">1st</td></tr>
+  <tr>
+    <td class="align-files-cell" colspan="2">
+      <div class="scrollable">
+	<table id="selected-align-files" style="width: 100%"></table>
+      </div>
+    </td>
+  </tr>
   <tr>
     <td class="align-files-cell">
-      <span style="padding-left: 20px">source files</span>
-      <ul id="align-source-files" class="tree-list"></ul>
+      <div class="scrollable">
+	<span style="padding-left: 20px">source files</span>
+	<ul id="align-source-files" class="tree-list"></ul>
+      </div>
     </td>
     <td class="align-files-cell">
-      <span style="padding-left: 20px">target files</span>
-      <ul id="align-target-files" class="tree-list"></ul>
+      <div class="scrollable">
+	<span style="padding-left: 20px">target files</span>
+	<ul id="align-target-files" class="tree-list"></ul>
+      </div>
     </td>
   </tr>
 </table>
