@@ -111,25 +111,21 @@ class XmlParser:
                     metadata["path"] = self.attrs["path"]
         return metadata
 
-'''
-xmlData = """
-<letsmt-ws version="56">
-  <list path="">
-    <entry path="testcorpus/mikkotest/uploads/html/fi/1.html">
-      <description></description>
-      <gid>mikkotest</gid>
-      <import_runtime>3</import_runtime>
-      <imported_to>xml/fi/1.xml</imported_to>
-      <owner>mikkotest</owner>
-      <status>imported</status>
-    </entry>
-  </list>
-  <status code="0" location="/metadata/testcorpus/mikkotest/uploads/html/fi/1.html" operation="GET" type="ok">Found matching path ID. Listing all of its properties</status>
-</letsmt-ws>
-"""
-
-parser = XmlParser(xmlData.split("\n"))
-
-print(parser.getMetadata())
-
-'''
+    def getAlignCandidates(self):
+        candidates = {}
+        key = ""
+        value = []
+        for line in self.xmlData:
+            self.parseLine(line)
+            if self.start == "entry":
+                m = re.search("^.*?/.*?/.*?/(.*)", self.attrs["path"])
+                if m:
+                    key = m.group(1)
+                else:
+                    key = ""
+            if self.start == "align-candidates":
+                value = re.sub("xml/", "", self.chara).split(",")
+                candidates[key] = value
+                key = ""
+                value = []
+        return candidates

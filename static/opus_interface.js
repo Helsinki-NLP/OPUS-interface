@@ -265,29 +265,62 @@ function processAlignment(filename, subdir_id, subdir) {
 	    num = targetnum;
 	    soutar = "target";
 	}
-	console.log(sourcenum, targetnum, linenumber);
 	if (Math.max(sourcenum, targetnum) > linenumber) {
-	    linenumber += 1;
-	    $("#selected-align-files").append('<tr id="selected-align'+linenumber+'"> \
-<td id="delete-align-cell'+linenumber+'" style="width: 25%"><button id="delete-align-row-button'+linenumber+'">-</button></td> \
-<td id="source-align-cell'+linenumber+'" style="width: 25%"></td> \
-<td id="target-align-cell'+linenumber+'" style="width: 25%"></td> \
-<td id="align-button-cell'+linenumber+'" style="width: 25%"><input type="checkbox"><button>align</button></td> \
-</tr>');
-	    let deleteid = linenumber;
-	    $(document).on("click", "#delete-align-row-button"+linenumber, function() {
-		if ($("#source-align-cell"+deleteid).text() == "") {
-		    sourcenum += 1;
-		}
-		if ($("#target-align-cell"+deleteid).text() == "") {
-		    targetnum += 1;
-		}
-		$("#selected-align"+deleteid).remove();
-	    });
+	    create_alignment_row()
 	}
 	$("#"+soutar+"-align-cell"+num).text(name);
     });
 }
+
+function create_alignment_row() {
+    linenumber += 1;
+    $("#selected-align-files").append('<tr id="selected-align'+linenumber+'"> \
+<td id="delete-align-cell'+linenumber+'" style="width: 5%; border: none"><button id="delete-align-row-button'+linenumber+'">-</button></td> \
+<td id="source-align-cell'+linenumber+'" style="width: 48%; border: none"></td> \
+<td id="target-align-cell'+linenumber+'" style="width: 37%; border: none"></td> \
+<td id="align-button-cell'+linenumber+'" style="width: 10%; border: none"><input type="checkbox"><button>align</button></td> \
+</tr>');
+    let deleteid = linenumber;
+    if ($("#align-all-selected").css("display") == "none") {
+	$("#align-all-selected").css("display", "");
+    }
+    $(document).on("click", "#delete-align-row-button"+linenumber, function() {
+	if ($("#source-align-cell"+deleteid).text() == "") {
+	    sourcenum += 1;
+	}
+	if ($("#target-align-cell"+deleteid).text() == "") {
+	    targetnum += 1;
+	}
+	$("#selected-align"+deleteid).remove();
+	if ($("#selected-align-files")[0].childElementCount == 0) {
+	    $("#align-all-selected").css("display", "none");
+	}
+    });
+}
+
+function find_alignment_candidates() {
+    $.getJSON("https://opus-repository.ling.helsinki.fi/find_alignment_candidates", {
+	corpus: $("#corpusname").text(),
+	branch: $("#choose-branch").val()
+    }, function(data) {
+	for (let i=0; i<data.file_list.length; i++) {
+	    let source_file = data.file_list[i];
+	    let candidates = data.candidates[source_file];
+	    for (let j=0; j<candidates.length; j++) {
+		let target_file = candidates[j];
+		create_alignment_row();
+		sourcenum++;
+		targetnum++;
+		$("#source-align-cell"+sourcenum).text(source_file);
+		$("#target-align-cell"+targetnum).text(target_file);
+	    }
+	}
+    });
+};
+
+$("#find-align-candidates").on("click", function() {
+    find_alignment_candidates();
+});
     
 function processFile(filename, path, root) {
     $(document).on("click", "#"+path, function() {
@@ -414,6 +447,10 @@ $("#align-button").on("click", function() {
 $("#close-alignment").on("click", function() {
     $("#align-selection-table").css("display", "none");
     $("#file-structure-table").css("display", "");
+});
+
+$("#settings").on("click", function() {
+    window.location.href = "https://opus-repository.ling.helsinki.fi/corpus_settings/" + $("#corpusname").text();
 });
 
 let branch = decodeURIComponent(window.location.search.substring(1)).split("&")[0].split("=")[1];

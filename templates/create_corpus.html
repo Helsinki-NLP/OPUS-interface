@@ -1,13 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
 
+{% if ftype == "create" %}
 <h3>Create Corpus</h3>
+{% elif ftype == "settings" %}
+<h3>Corpus Settings</h3>
+{% endif %}
 
 <form id="corpus_form" method="post" style="padding: 20px">
-  <table style="float: left; padding-right: 20px">
+  <table style="padding-right: 20px">
     <tr>
       <td align="right">name:</td>
-      <td><input type="text" name="name" value="{{ name }}"></td>
+      <td><input type="text" name="name" value="{{ name }}" {% if ftype == "settings" %}readonly{% endif %}></td>
+      <td align="right">description:</td>
+      <td rowspan="4"><textarea rows="10" cols="40" name="description">{{ description }}</textarea></td>
     </tr>
     <tr>
       <td align="right">read access:</td>
@@ -30,26 +36,30 @@
       <td><input type="text" name="domain" value="{{ domain }}"></td>
     </tr>
     <tr>
-      <td align="right">origin: </td>
+      <td align="right">origin:</td>
       <td><input type="text" name="origin" value="{{ origin }}"></td>
     </tr>
-    <!--
+    <tr style="height: 40px"></tr>
     <tr>
-      <td align="right">private: </td>
-      {% if private %}
-      <td><input type="checkbox" name="private" checked></td>
-      {% else %}
-      <td><input type="checkbox" name="private"></td>
-      {% endif %}
+      <td align="right">automatic alignment:</td>
+      <td><input type="checkbox" name="autoalignment" {% if autoalignment %}checked{% endif %}></td>
+      <td align="right">automatic import:</td>
+      <td><input type="checkbox"></td>
     </tr>
-    -->
+    <tr>
+      <td align="right">document alignment:</td>
+      <td><select><option>testoption</option></select></td>
+      <td align="right">PDF reader:</td>
+      <td><select><option>testoption</option></select></td>
+    </tr>
+    <tr>
+      <td align="right">sentence alignment:</td>
+      <td><select><option>testoption</option></select></td>
+    </tr>
     <tr>
       <td></td>
-      <td><input type="submit" name="submit" value="Create"></td>
+      <td><input type="submit" name="submit" value="{% if ftype == "create" %}Create{% elif ftype == "settings" %}Save{% endif %}"></td>
     </tr>
   </table>
-  <span style="float: left; padding-right: 10px">description:</span>
-  <textarea style="float: left" rows="10" cols="40" name="description">{{ description }}</textarea>
-</form>
 
 {% endblock %}

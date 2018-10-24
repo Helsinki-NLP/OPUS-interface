@@ -22,8 +22,8 @@ import traceback
 
 rh = request_handler.RequestHandler()
 
-UPLOAD_FOLDER = "/var/www/uploads"
-ALLOWED_EXTENSIONS = set(['txt', 'xml', 'html', 'tar'])
+UPLOAD_FOLDER = "/home/cloud-user/uploads"
+ALLOWED_EXTENSIONS = set(['txt', 'xml', 'html', 'tar', 'gz'])
 
 app = Flask(__name__)
 
@@ -83,13 +83,14 @@ def create_corpus():
     groups.sort()
 
     if request.method == "POST":
+        print(request.form)
         corpusName = request.form["name"]
         if corpusName == "" or " " in corpusName or not all(ord(char) < 128 for char in corpusName):
-            private = False
-            if "private" in request.form.keys():
-                private = True
+            autoalignment = False
+            if "autoalignment" in request.form.keys():
+                autoalignment = True
             flash("Name must be ASCII only and must not contain spaces")
-            return render_template("create_corpus.html", groups=groups, name=request.form['name'], domain=request.form['domain'], origin=request.form['origin'], description=request.form['description'], selectedgroup=request.form['group'], private=private)
+            return render_template("create_corpus.html", groups=groups, name=request.form['name'], domain=request.form['domain'], origin=request.form['origin'], description=request.form['description'], selectedgroup=request.form['group'], autoalignment=autoalignment, ftype="create")
 
         parameters = {"uid": username}
         if request.form["group"] != "public":
@@ -107,9 +108,58 @@ def create_corpus():
             traceback.print_exc()
             
         flash('Corpus "' + corpusName + '" created!')
-        return redirect(url_for('frontpage'))
+        return redirect(url_for('show_corpus', corpusname=corpusName))
 
-    return render_template("create_corpus.html", groups=groups)
+    return render_template("create_corpus.html", groups=groups, ftype="create", autoalignment=True)
+
+@app.route('/corpus_settings/<corpusname>', methods=["GET", "POST"])
+@login_required
+def corpus_settings(corpusname):
+    if session:
+        username = session['username']
+
+    groupsXml = rh.get("/group/"+username, {"uid": username, "action": "showinfo"})
+    parser = xml_parser.XmlParser(groupsXml.split("\n"))
+    groups = parser.groupsForUser()
+    groups.sort()
+
+    metadataXml = rh.get("/metadata/"+corpusname+"/"+username, {"uid": username})
+    parser = xml_parser.XmlParser(metadataXml.split("\n"))
+    metadata = parser.getMetadata()
+
+    setting_fields = {"domain": "", "origin": "", "description": ""}
+    for key in setting_fields.keys():
+        if key in metadata.keys():
+            setting_fields[key] = metadata[key]
+
+    setting_fields["autoalignment"] = False
+    if "ImportPara_autoalign" not in metadata.keys() or ("ImportPara_autoalign" in metadatakeys() and metadata["ImportPara_autoalign"] == "on"):
+        setting_fields["autoalignment"] = True
+    
+    if request.method == "POST":
+
+        parameters = {"uid": username}
+        if request.form["group"] != "public":
+            parameters["gid"] = request.form["group"]
+
+        try:
+            parameters["ImportPara_autoalign"] = "off"
+            if "autoalignment" not in request.form.keys():
+                parameters["ImportPara_autoalign"] = "on"
+                
+            parameters = {"uid": username}
+            for key in request.form.keys():
+                if key in ["origin", "domain", "description"]:
+                    parameters[key] = request.form[key]
+
+            response = rh.put("/metadata/"+corpusname+"/"+username, parameters)
+        except:
+            traceback.print_exc()
+            
+        flash('Corpus settings saved!')
+        return redirect(url_for('show_corpus', corpusname=corpusname))
+
+    return render_template("create_corpus.html", groups=groups, name=corpusname, domain=setting_fields["domain"], origin=setting_fields["origin"], description=setting_fields["description"], autoalignment=setting_fields["autoalignment"], ftype="settings")
 
 @app.route('/create_group', methods=["GET", "POST"])
 @login_required
@@ -432,14 +482,14 @@ def upload_file():
                 if session:
                     username = session['username']
 
-                ret = rh.upload("/storage" + path, {"uid": username}, "/var/www/uploads/"+timename)
+                ret = rh.upload("/storage" + path, {"uid": username}, UPLOAD_FOLDER+"/"+timename)
 
                 if "autoimport" in request.form.keys():
                     response = rh.put("/job"+path, {"uid": username, "run": "import"})
 
                 response = rh.put("/metadata"+path, {"uid": username, "description": description, "direction": direction})
 
-                os.remove("/var/www/uploads/" + timename)
+                os.remove(UPLOAD_FOLDER + "/" + timename)
                 flash('Uploaded file "' + filename + '" to "' + path + '"')
 
                 return redirect(url_for('show_corpus', corpusname=corpus, branch=branch))
@@ -500,7 +550,26 @@ def delete_file():
     response = rh.delete("/storage"+path, {"uid": username})
 
     return jsonify(content = response)
-        
+
+@app.route('/find_alignment_candidates')
+@login_required
+def find_alignment_candidates():
+    try:
+        if session:
+            username = session['username']
+
+        corpus = request.args.get("corpus", "", type=str)
+        branch = request.args.get("branch", "", type=str)
+
+        candidates_xml = rh.get("/metadata/"+corpus+"/"+branch, {"uid": username, "ENDS_WITH_align-candidates": "xml", "type": "recursive", "action": "list_all"})
+        parser = xml_parser.XmlParser(candidates_xml.split("\n"))
+        candidates = parser.getAlignCandidates()
+        file_list = list(candidates.keys())
+        file_list.sort()
+        return jsonify(candidates = candidates, file_list = file_list)
+    except:
+        traceback.print_exc()
+    
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
