@@ -269,6 +269,17 @@ function processAlignment(filename, subdir_id, subdir) {
 	    create_alignment_row()
 	}
 	$("#"+soutar+"-align-cell"+num).text(name);
+	let sourcefile = $("#source-align-cell"+linenumber).text();
+	let targetfile = $("#target-align-cell"+linenumber).text();
+	if (sourcefile != "" && targetfile != "") {
+	    console.log("ok");
+	    $.getJSON("https://opus-repository.ling.helsinki.fi/add_alignment_candidate", {
+		filename: $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+sourcefile,
+		add_candidate: "xml/"+targetfile
+	    }, function(data) {
+		console.log(data)
+	    });
+	}
     });
 }
 
@@ -285,21 +296,35 @@ function create_alignment_row() {
 	$("#align-all-selected").css("display", "");
     }
     $(document).on("click", "#delete-align-row-button"+linenumber, function() {
-	if ($("#source-align-cell"+deleteid).text() == "") {
-	    sourcenum += 1;
-	}
-	if ($("#target-align-cell"+deleteid).text() == "") {
-	    targetnum += 1;
-	}
-	$("#selected-align"+deleteid).remove();
-	if ($("#selected-align-files")[0].childElementCount == 0) {
-	    $("#align-all-selected").css("display", "none");
-	}
+	delete_alignment_row(deleteid);
     });
 }
 
-function find_alignment_candidates() {
-    $.getJSON("https://opus-repository.ling.helsinki.fi/find_alignment_candidates", {
+function delete_alignment_row(deleteid) {
+    let sourcefile = $("#source-align-cell"+deleteid).text();
+    let targetfile = $("#target-align-cell"+deleteid).text();
+    $.getJSON("https://opus-repository.ling.helsinki.fi/remove_alignment_candidate", {
+	filename: $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+sourcefile,
+	rm_candidate: "xml/"+targetfile
+    }, function(data) {
+	console.log(data)
+    });
+    if (sourcefile == "") {
+	sourcenum += 1;
+    }
+    if (targetfile == "") {
+	targetnum += 1;
+    }
+    $("#selected-align"+deleteid).remove();
+    if ($("#selected-align-files")[0].childElementCount == 0) {
+	$("#align-all-selected").css("display", "none");
+    }
+}
+
+function list_alignment_candidates() {
+    $("#selected-align-files")[0].innerHTML = "";
+    $("#align-all-selected").css("display", "none");
+    $.getJSON("https://opus-repository.ling.helsinki.fi/list_alignment_candidates", {
 	corpus: $("#corpusname").text(),
 	branch: $("#choose-branch").val()
     }, function(data) {
@@ -319,7 +344,13 @@ function find_alignment_candidates() {
 };
 
 $("#find-align-candidates").on("click", function() {
-    find_alignment_candidates();
+    $.getJSON("https://opus-repository.ling.helsinki.fi/find_alignment_candidates", {
+	corpus: $("#corpusname").text(),
+	branch: $("#choose-branch").val()
+    }, function(data) {
+	console.log(data);
+	list_alignment_candidates();
+    });
 });
     
 function processFile(filename, path, root) {
@@ -442,6 +473,7 @@ $("#filedisplay-close").on("click", function() {
 $("#align-button").on("click", function() {
     $("#file-structure-table").css("display", "none");
     $("#align-selection-table").css("display", "");
+    list_alignment_candidates();
 });
 
 $("#close-alignment").on("click", function() {

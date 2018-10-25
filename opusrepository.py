@@ -103,6 +103,9 @@ def create_corpus():
                 if key in ["origin", "domain", "description"]:
                     parameters[key] = request.form[key]
 
+            if "autoalignment" not in request.form.keys():
+                parameters["ImportPara_autoalign"] = "off"
+
             response = rh.put("/metadata/"+corpusName+"/"+username, parameters)
         except:
             traceback.print_exc()
@@ -133,26 +136,25 @@ def corpus_settings(corpusname):
             setting_fields[key] = metadata[key]
 
     setting_fields["autoalignment"] = False
-    if "ImportPara_autoalign" not in metadata.keys() or ("ImportPara_autoalign" in metadatakeys() and metadata["ImportPara_autoalign"] == "on"):
+    if "ImportPara_autoalign" not in metadata.keys() or ("ImportPara_autoalign" in metadata.keys() and metadata["ImportPara_autoalign"] == "on"):
         setting_fields["autoalignment"] = True
     
     if request.method == "POST":
-
+        print(request.form)
         parameters = {"uid": username}
         if request.form["group"] != "public":
             parameters["gid"] = request.form["group"]
 
         try:
-            parameters["ImportPara_autoalign"] = "off"
+            parameters["ImportPara_autoalign"] = "on"
             if "autoalignment" not in request.form.keys():
-                parameters["ImportPara_autoalign"] = "on"
+                parameters["ImportPara_autoalign"] = "off"
                 
-            parameters = {"uid": username}
             for key in request.form.keys():
                 if key in ["origin", "domain", "description"]:
                     parameters[key] = request.form[key]
 
-            response = rh.put("/metadata/"+corpusname+"/"+username, parameters)
+            response = rh.post("/metadata/"+corpusname+"/"+username, parameters)
         except:
             traceback.print_exc()
             
@@ -551,9 +553,9 @@ def delete_file():
 
     return jsonify(content = response)
 
-@app.route('/find_alignment_candidates')
+@app.route('/list_alignment_candidates')
 @login_required
-def find_alignment_candidates():
+def list_alignment_candidates():
     try:
         if session:
             username = session['username']
@@ -569,11 +571,65 @@ def find_alignment_candidates():
         return jsonify(candidates = candidates, file_list = file_list)
     except:
         traceback.print_exc()
+
+@app.route('/find_alignment_candidates')
+@login_required
+def find_alignment_candidates():
+    try:
+        if session:
+            username = session['username']
+
+        corpus = request.args.get("corpus", "", type=str)
+        branch = request.args.get("branch", "", type=str)
+
+        response = rh.put("/job/"+corpus+"/"+branch+"/xml", {"uid": username, "run": "detect_translations"})
+
+        return jsonify(content = response)
+    except:
+        traceback.print_exc()
     
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+
+@app.route('/remove_alignment_candidate')
+@login_required
+def remove_alignment_candidate():
+    try:
+        if session:
+            username = session['username']
+
+        filename = request.args.get("filename", "", type=str)
+        rm_candidate = request.args.get("rm_candidate", "", type=str)
+
+        candidates_xml = rh.get("/metadata/"+filename, {"uid": username})
+        parser = xml_parser.XmlParser(candidates_xml.split("\n"))
+        candidates = parser.getAlignCandidates()
+        temp_candidates = candidates[list(candidates.keys())[0]]
+        cur_candidates = ["xml/"+c for c in temp_candidates]
+        cur_candidates.remove(rm_candidate)
+        response = rh.post("/metadata/"+filename, {"uid": username, "align-candidates": ",".join(cur_candidates)})
+
+        return jsonify(content=response)
+    except:
+        traceback.print_exc()
+
+@app.route('/add_alignment_candidate')
+@login_required
+def add_alignmentcandidate():
+    try:
+        if session:
+            username = session['username']
+
+        filename = request.args.get("filename", "", type=str)
+        add_candidate = request.args.get("add_candidate", "", type=str)
+
+        response = rh.put("/metadata/"+filename, {"uid": username, "align-candidates": add_candidate})
+
+        return jsonify(content=response)
+    except:
+        traceback.print_exc()
 
 @app.route('/login/', methods=["GET", "POST"])
 def login_page():
