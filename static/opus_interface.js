@@ -289,14 +289,28 @@ function create_alignment_row() {
 <td id="delete-align-cell'+linenumber+'" style="width: 5%; border: none"><button id="delete-align-row-button'+linenumber+'">-</button></td> \
 <td id="source-align-cell'+linenumber+'" style="width: 48%; border: none"></td> \
 <td id="target-align-cell'+linenumber+'" style="width: 37%; border: none"></td> \
-<td id="align-button-cell'+linenumber+'" style="width: 10%; border: none"><input type="checkbox"><button>align</button></td> \
+<td id="align-button-cell'+linenumber+'" style="width: 10%; border: none"><input type="checkbox"><button id="align-button'+linenumber+'">align</button></td> \
 </tr>');
-    let deleteid = linenumber;
+    let currentid = linenumber;
     if ($("#align-all-selected").css("display") == "none") {
 	$("#align-all-selected").css("display", "");
     }
     $(document).on("click", "#delete-align-row-button"+linenumber, function() {
-	delete_alignment_row(deleteid);
+	delete_alignment_row(currentid);
+    });
+    $(document).on("click", "#align-button"+linenumber, function() {
+	align_candidate(currentid);
+    });
+}
+
+function align_candidate(currentid) {
+    let sourcefile = $("#source-align-cell"+currentid).text();
+    let targetfile = $("#target-align-cell"+currentid).text();
+    $.getJSON("https://opus-repository.ling.helsinki.fi/align_candidate", {
+	filename: $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+sourcefile,
+	candidate: "xml/"+targetfile
+    }, function(data) {
+	console.log(data)
     });
 }
 

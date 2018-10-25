@@ -617,7 +617,7 @@ def remove_alignment_candidate():
 
 @app.route('/add_alignment_candidate')
 @login_required
-def add_alignmentcandidate():
+def add_alignment_candidate():
     try:
         if session:
             username = session['username']
@@ -626,6 +626,21 @@ def add_alignmentcandidate():
         add_candidate = request.args.get("add_candidate", "", type=str)
 
         response = rh.put("/metadata/"+filename, {"uid": username, "align-candidates": add_candidate})
+
+        return jsonify(content=response)
+    except:
+        traceback.print_exc()
+
+@app.route('/align_candidate')
+@login_required
+def align_candidate():
+    try:
+        if session:
+             username = session['username']
+        filename = request.args.get("filename", "", type=str)
+        candidate = request.args.get("candidate", "", type=str)
+
+        response = rh.put("/job/"+filename, {"uid": username, "run": "align_candidates"})
 
         return jsonify(content=response)
     except:
