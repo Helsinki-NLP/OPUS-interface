@@ -104,8 +104,18 @@
   <tr>
     <td class="align-files-cell" colspan="2">
       <div class="scrollable">
+	<table id="align-all-selected" style="width: 100%">
+	  <tr>
+	    <td style="width: 85%; border: none"></td>
+	    <td style="width: 15%; border: none">
+	      <input id="select-all-checkboxes" type="checkbox"><button id="align-all-selected-button">align selected</button>
+	    </td>
+	  </tr>
+	</table>
 	<table id="selected-align-files" style="width: 100%"></table>
-	<button id="align-all-selected" style="float: right; display: none">align all selected</button>
+	<!--
+	<span id="align-all-selected" style="float: right; display: none"><input id="select-all-checkboxes" type="checkbox"><button id="align-all-selected-button">align all selected</button></span>
+	-->
       </div>
     </td>
   </tr>

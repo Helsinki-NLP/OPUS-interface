@@ -23,6 +23,7 @@ import traceback
 rh = request_handler.RequestHandler()
 
 UPLOAD_FOLDER = "/home/cloud-user/uploads"
+download_folder= "/home/cloud-user/downloads"
 ALLOWED_EXTENSIONS = set(['txt', 'xml', 'html', 'tar', 'gz'])
 
 app = Flask(__name__)
@@ -228,11 +229,11 @@ def download(filename):
         timename = str(time.time())+"###TIME###"+filename
         global previous_download
         if previous_download != "":
-            os.remove("/var/www/downloads/"+previous_download)
+            os.remove(download_folder+"/"+previous_download)
         previous_download = timename
-        with open("/var/www/downloads/"+timename, "w") as f:
+        with open(download_folder+"/"+timename, "w") as f:
             f.write(ret)
-        return send_file("/var/www/downloads/"+timename, attachment_filename=filename)
+        return send_file(download_folder+"/"+timename, attachment_filename=filename)
     except:
         traceback.print_exc()
 
@@ -251,11 +252,11 @@ def download_file():
         timename = str(time.time())+"###TIME###"+filename
         global previous_download
         if previous_download != "":
-            os.remove("/var/www/downloads/"+previous_download)
+            os.remove(download_folder+"/"+previous_download)
         previous_download = timename
-        with open("/var/www/downloads/"+timename, "w") as f:
+        with open(download_folder+"/"+timename, "w") as f:
             f.write(ret)
-        return send_from_directory("/var/www/downloads/", timename, as_attachment=True, attachment_filename=filename)
+        return send_from_directory(download_folder+"/", timename, as_attachment=True, attachment_filename=filename)
     except:
         traceback.print_exc()
         

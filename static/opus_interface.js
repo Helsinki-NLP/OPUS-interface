@@ -168,7 +168,7 @@ function subdir_to_list(directories, id_name){
     for (let i=0; i<directories.length; i++) {
 	let subdir = id_name+"-_-"+directories[i][0];
 	subdir = subdir.replace(/\./g, "-_DOT_-");	
-	$("#"+id_name).append('<li id="'+subdir+'" ptype="' + directories[i][1] + '" opened="none">'+directories[i][0]+'</li>');
+	$("#"+id_name).append('<li id="'+subdir+'" ptype="' + directories[i][1] + '" opened="none"><span style="cursor: pointer">'+directories[i][0]+'</span></li>');
 	let ptype = directories[i][1];
 	if (ptype == "dir") {
 	    $("#"+subdir).on("click", function() {
@@ -222,16 +222,16 @@ function open_subdir(subdir) {
 	    subdir_id = subdir_id.replace(/\./g, "-_DOT_-");
 	    let ptype = subdirs[i][1];
 	    if (ptype == "dir") {
-		subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none">'+subdirs[i][0]+'</li>';
+		subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><span style="cursor: pointer">'+subdirs[i][0]+'</span></li>';
 		$(document).on("click", "#"+subdir_id, function() {
 		    open_or_close(subdir_id);
 		});
 	    } else if (ptype == "file") {
 		if (subdir.match("^align")) {
-		    subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><button id="'+subdir_id+'-align">+</button>'+subdirs[i][0]+'</li>';
+		    subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><button id="'+subdir_id+'-align">+</button><span style="cursor: pointer">'+subdirs[i][0]+'</span></li>';
 		    processAlignment(subdirs[i][0], subdir_id, subdir);
 		} else {
-		    subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none">'+subdirs[i][0]+'</li>';
+		    subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><span style="cursor: pointer">'+subdirs[i][0]+'</span></li>';
 		    processFile(subdirs[i][0], subdir_id, subdir);
 		}
 	    }
@@ -287,9 +287,9 @@ function create_alignment_row() {
     linenumber += 1;
     $("#selected-align-files").append('<tr id="selected-align'+linenumber+'"> \
 <td id="delete-align-cell'+linenumber+'" style="width: 5%; border: none"><button id="delete-align-row-button'+linenumber+'">-</button></td> \
-<td id="source-align-cell'+linenumber+'" style="width: 48%; border: none"></td> \
-<td id="target-align-cell'+linenumber+'" style="width: 37%; border: none"></td> \
-<td id="align-button-cell'+linenumber+'" style="width: 10%; border: none"><input id="selected-align-row'+linenumber+'" type="checkbox"><button id="align-button'+linenumber+'">align</button></td> \
+<td id="source-align-cell'+linenumber+'" style="width: 47%; border: none"></td> \
+<td id="target-align-cell'+linenumber+'" style="width: 33%; border: none"></td> \
+<td id="align-button-cell'+linenumber+'" style="width: 15%; border: none"><input id="selected-align-row'+linenumber+'" type="checkbox"><button id="align-button'+linenumber+'">align</button></td> \
 </tr>');
     let currentid = linenumber;
     if ($("#align-all-selected").css("display") == "none") {
@@ -300,26 +300,48 @@ function create_alignment_row() {
     });
     $(document).on("click", "#align-button"+linenumber, function() {
 	let files = $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+$("#source-align-cell"+currentid).text();
-	align_candidates(files);
+	align_candidates(files, [currentid]);
     });
 }
 
-function align_candidates(files) {
+function align_candidates(files, deleteids) {
     $.getJSON("https://opus-repository.ling.helsinki.fi/align_candidates", {
 	files: files
     }, function(data) {
 	console.log(data)
+	for (let i=0; i<deleteids.length; i++) {
+	    $("#selected-align"+deleteids[i]).remove();
+	    if ($("#selected-align-files")[0].childElementCount == 0) {
+		$("#align-all-selected").css("display", "none");
+	    }
+	}
     });
 }
 
-$("#align-all-selected").on("click", function() {
+$("#align-all-selected-button").on("click", function() {
     let files = "";
+    deleteids = []
     for (let i=1; i<=linenumber; i++) {
 	if ($("#selected-align-row"+i).prop("checked") == true) {
 	    files = files + $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+$("#source-align-cell"+i).text()+",";
+	    deleteids.push(i)
 	}
     }
-    align_candidates(files.substring(0, files.length-1));
+    if (files != "") {
+	align_candidates(files.substring(0, files.length-1), deleteids);
+    }
+});
+
+$("#select-all-checkboxes").on("click", function() {
+    if ($("#select-all-checkboxes").prop("checked") == true) {
+	for (let i=1; i<=linenumber; i++) {
+	    $("#selected-align-row"+i).prop("checked", true);
+	}
+    } else if ($("#select-all-checkboxes").prop("checked") == false) {
+	for (let i=1; i<=linenumber; i++) {
+	    $("#selected-align-row"+i).prop("checked", false);
+	}
+    }
 });
 
 function delete_alignment_row(deleteid) {
@@ -330,22 +352,23 @@ function delete_alignment_row(deleteid) {
 	rm_candidate: "xml/"+targetfile
     }, function(data) {
 	console.log(data)
+	if (sourcefile == "") {
+	    sourcenum += 1;
+	}
+	if (targetfile == "") {
+	    targetnum += 1;
+	}
+	$("#selected-align"+deleteid).remove();
+	if ($("#selected-align-files")[0].childElementCount == 0) {
+	    $("#align-all-selected").css("display", "none");
+	}
     });
-    if (sourcefile == "") {
-	sourcenum += 1;
-    }
-    if (targetfile == "") {
-	targetnum += 1;
-    }
-    $("#selected-align"+deleteid).remove();
-    if ($("#selected-align-files")[0].childElementCount == 0) {
-	$("#align-all-selected").css("display", "none");
-    }
 }
 
 function list_alignment_candidates() {
     $("#selected-align-files")[0].innerHTML = "";
     $("#align-all-selected").css("display", "none");
+    $("#select-all-checkboxes").prop("checked", false);
     $.getJSON("https://opus-repository.ling.helsinki.fi/list_alignment_candidates", {
 	corpus: $("#corpusname").text(),
 	branch: $("#choose-branch").val()
