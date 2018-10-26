@@ -631,16 +631,18 @@ def add_alignment_candidate():
     except:
         traceback.print_exc()
 
-@app.route('/align_candidate')
+@app.route('/align_candidates')
 @login_required
-def align_candidate():
+def align_candidates():
     try:
         if session:
-             username = session['username']
-        filename = request.args.get("filename", "", type=str)
-        candidate = request.args.get("candidate", "", type=str)
+            username = session['username']
+        files = request.args.get("files", "", type=str)
 
-        response = rh.put("/job/"+filename, {"uid": username, "run": "align_candidates"})
+        print("list:", type(files.split(",")), files.split(","))
+
+        for filename in files.split(","):
+            response = rh.put("/job/"+filename, {"uid": username, "run": "align_candidates"})
 
         return jsonify(content=response)
     except:

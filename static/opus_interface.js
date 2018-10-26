@@ -289,7 +289,7 @@ function create_alignment_row() {
 <td id="delete-align-cell'+linenumber+'" style="width: 5%; border: none"><button id="delete-align-row-button'+linenumber+'">-</button></td> \
 <td id="source-align-cell'+linenumber+'" style="width: 48%; border: none"></td> \
 <td id="target-align-cell'+linenumber+'" style="width: 37%; border: none"></td> \
-<td id="align-button-cell'+linenumber+'" style="width: 10%; border: none"><input type="checkbox"><button id="align-button'+linenumber+'">align</button></td> \
+<td id="align-button-cell'+linenumber+'" style="width: 10%; border: none"><input id="selected-align-row'+linenumber+'" type="checkbox"><button id="align-button'+linenumber+'">align</button></td> \
 </tr>');
     let currentid = linenumber;
     if ($("#align-all-selected").css("display") == "none") {
@@ -299,20 +299,28 @@ function create_alignment_row() {
 	delete_alignment_row(currentid);
     });
     $(document).on("click", "#align-button"+linenumber, function() {
-	align_candidate(currentid);
+	let files = $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+$("#source-align-cell"+currentid).text();
+	align_candidates(files);
     });
 }
 
-function align_candidate(currentid) {
-    let sourcefile = $("#source-align-cell"+currentid).text();
-    let targetfile = $("#target-align-cell"+currentid).text();
-    $.getJSON("https://opus-repository.ling.helsinki.fi/align_candidate", {
-	filename: $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+sourcefile,
-	candidate: "xml/"+targetfile
+function align_candidates(files) {
+    $.getJSON("https://opus-repository.ling.helsinki.fi/align_candidates", {
+	files: files
     }, function(data) {
 	console.log(data)
     });
 }
+
+$("#align-all-selected").on("click", function() {
+    let files = "";
+    for (let i=1; i<=linenumber; i++) {
+	if ($("#selected-align-row"+i).prop("checked") == true) {
+	    files = files + $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+$("#source-align-cell"+i).text()+",";
+	}
+    }
+    align_candidates(files.substring(0, files.length-1));
+});
 
 function delete_alignment_row(deleteid) {
     let sourcefile = $("#source-align-cell"+deleteid).text();
