@@ -106,15 +106,13 @@ function editMetadata(datapath) {
     }
 }
 
-function showFilecontent(datapath) {
-    $("#file-metadata").text("");
-    $("#file-content").text("");
-    $("#editmetadata").css("display", "none");
+function showFilecontent(datapath, windowid) {
+    $(windowid).text("");
     let path = formulate_datapath(datapath);
     $.getJSON("https://opus-repository.ling.helsinki.fi/get_filecontent", {
 	path: path
     }, function(data) {
-	$("#file-content").text(data.content);
+	$(windowid).text(data.content);
     });
 }
 
@@ -228,7 +226,7 @@ function open_subdir(subdir) {
 		});
 	    } else if (ptype == "file") {
 		if (subdir.match("^align")) {
-		    subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><button id="'+subdir_id+'-align">+</button><span style="cursor: pointer">'+subdirs[i][0]+'</span></li>';
+		    subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><button id="'+subdir_id+'-align">+</button><span id="'+subdir_id+'-file" style="cursor: pointer">'+subdirs[i][0]+'</span></li>';
 		    processAlignment(subdirs[i][0], subdir_id, subdir);
 		} else {
 		    subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><span style="cursor: pointer">'+subdirs[i][0]+'</span></li>';
@@ -252,6 +250,17 @@ var targetnum = 0;
 var linenumber = 0;
 
 function processAlignment(filename, subdir_id, subdir) {
+    $(document).on("click", "#"+subdir_id+"-file", function() {
+	if (subdir.match("^align-source-files")) {
+	    $("#align-source-file-structure").css("display", "none");
+	    $("#align-source-file-content-view").css("display", "");
+	    showFilecontent(subdir_id.replace(/align-source-files/, "xml"), "#align-source-file-content");
+	} else if (subdir.match("^align-target-files")) {
+	    $("#align-target-file-structure").css("display", "none");
+	    $("#align-target-file-content-view").css("display", "");
+	    showFilecontent(subdir_id.replace(/align-target-files/, "xml"), "#align-target-file-content");
+	}
+    });
     $(document).on("click", "#"+subdir_id+"-align", function() {
 	let name = subdir.replace(/-_-/g, "/").replace(/^.*?\//, "")+"/"+filename;
 	let soutar = "";
@@ -272,7 +281,6 @@ function processAlignment(filename, subdir_id, subdir) {
 	let sourcefile = $("#source-align-cell"+linenumber).text();
 	let targetfile = $("#target-align-cell"+linenumber).text();
 	if (sourcefile != "" && targetfile != "") {
-	    console.log("ok");
 	    $.getJSON("https://opus-repository.ling.helsinki.fi/add_alignment_candidate", {
 		filename: $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+sourcefile,
 		add_candidate: "xml/"+targetfile
@@ -454,7 +462,9 @@ function editAlignment(path) {
 
 function switchMetadataAndContent(subdir_id) {
     if ($("#viewfile").attr("showing") == "metadata") {
-	showFilecontent(subdir_id);
+	$("#file-metadata").text("");
+	$("#editmetadata").css("display", "none");
+	showFilecontent(subdir_id, "#file-content");
 	$("#viewfile").text("metadata");
 	$("#viewfile").attr("showing", "content");
     } else if ($("#viewfile").attr("showing") == "content") {
@@ -513,6 +523,16 @@ $("#filedisplay-close").on("click", function() {
     } else if (tree == "parallel") {
 	showOrHideTrees("uploads", "monolingual", "", "show");
     }
+});
+
+$("#close-align-source-file-content").on("click", function() {
+    $("#align-source-file-structure").css("display", "");
+    $("#align-source-file-content-view").css("display", "none");
+});
+
+$("#close-align-target-file-content").on("click", function() {
+    $("#align-target-file-structure").css("display", "");
+    $("#align-target-file-content-view").css("display", "none");
 });
 
 $("#align-button").on("click", function() {

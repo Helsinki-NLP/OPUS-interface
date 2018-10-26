@@ -122,14 +122,26 @@
   <tr>
     <td class="align-files-cell">
       <div class="scrollable">
-	<span style="padding-left: 20px">source files</span>
-	<ul id="align-source-files" class="tree-list"></ul>
+	<div id="align-source-file-structure">
+	  <span style="padding-left: 20px">source files</span>
+	  <ul id="align-source-files" class="tree-list"></ul>
+	</div>
+	<div id="align-source-file-content-view" style="display: none">
+	  <button id="close-align-source-file-content" style="float: right">close</button>
+	  <div id="align-source-file-content" style="white-space: pre-wrap; clear: both"></div>
+	</div>
       </div>
     </td>
     <td class="align-files-cell">
       <div class="scrollable">
-	<span style="padding-left: 20px">target files</span>
-	<ul id="align-target-files" class="tree-list"></ul>
+	<div id="align-target-file-structure">
+	  <span style="padding-left: 20px">target files</span>
+	  <ul id="align-target-files" class="tree-list"></ul>
+	</div>
+	<div id="align-target-file-content-view" style="display: none">
+	  <button id="close-align-target-file-content" style="float: right">close</button>
+	  <div id="align-target-file-content" style="white-space: pre-wrap; clear: both"></div>
+	</div>
       </div>
     </td>
   </tr>
