@@ -70,7 +70,7 @@ def index():
     groups = parser.groupsForUser()
     groups.sort()
 
-    return render_template("frontpage.html", corpora=corpora, groups=groups)
+    return render_template("frontpage.html", corpora=corpora, groups=groups, username=username)
 
 @app.route('/create_corpus', methods=["GET", "POST"])
 @login_required
