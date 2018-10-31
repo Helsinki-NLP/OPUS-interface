@@ -551,9 +551,9 @@ $("#settings").on("click", function() {
     window.location.href = "https://opus-repository.ling.helsinki.fi/corpus_settings/" + $("#corpusname").text();
 });
 
-let branch = decodeURIComponent(window.location.search.substring(1)).split("&")[0].split("=")[1];
+let branchname = decodeURIComponent(window.location.search.substring(1)).split("&")[0].split("=")[1];
 
-if (branch != undefined) {
+if (branchname != undefined) {
     $("#choose-branch").val(branch);
 }
 
