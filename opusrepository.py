@@ -324,6 +324,7 @@ def update_metadata():
         path = request.args.get("path", "", type=str)
         metadata = request.args.get("changes", "", type=str)
         metadata = json.loads(metadata)
+
         metadata["uid"] = username
         response = rh.post("/metadata"+path, metadata)
 
@@ -638,12 +639,12 @@ def align_candidates():
     try:
         if session:
             username = session['username']
-        files = request.args.get("files", "", type=str)
+        filesdata = request.args.get("files", "", type=str)
 
-        print("list:", type(files.split(",")), files.split(","))
+        files = json.loads(filesdata);
 
-        for filename in files.split(","):
-            response = rh.put("/job/"+filename, {"uid": username, "run": "align_candidates"})
+        for filename in files.keys():
+            response = rh.put("/job/"+filename, {"uid": username, "trg": files[filename], "run": "align"})
 
         return jsonify(content=response)
     except:

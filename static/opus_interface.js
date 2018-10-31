@@ -307,36 +307,41 @@ function create_alignment_row() {
 	delete_alignment_row(currentid);
     });
     $(document).on("click", "#align-button"+linenumber, function() {
-	let files = $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+$("#source-align-cell"+currentid).text();
+	let sourcefile = $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+$("#source-align-cell"+currentid).text();
+	let files = {};
+	files[sourcefile] = "xml/"+$("#target-align-cell"+currentid).text();
 	align_candidates(files, [currentid]);
     });
 }
 
 function align_candidates(files, deleteids) {
+    $("#messages")[0].innerHTML = "";
+    $("#messages").append('<li>Started aligning files...</li>');
     $.getJSON("https://opus-repository.ling.helsinki.fi/align_candidates", {
-	files: files
+	files: JSON.stringify(files)
     }, function(data) {
 	console.log(data)
 	for (let i=0; i<deleteids.length; i++) {
 	    $("#selected-align"+deleteids[i]).remove();
-	    if ($("#selected-align-files")[0].childElementCount == 0) {
-		$("#align-all-selected").css("display", "none");
-	    }
+	}
+	if ($("#selected-align-files")[0].childElementCount == 0) {
+	    $("#align-all-selected").css("display", "none");
 	}
     });
 }
 
 $("#align-all-selected-button").on("click", function() {
-    let files = "";
-    deleteids = []
+    let files = {};
+    let deleteids = []
     for (let i=1; i<=linenumber; i++) {
 	if ($("#selected-align-row"+i).prop("checked") == true) {
-	    files = files + $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+$("#source-align-cell"+i).text()+",";
-	    deleteids.push(i)
+	    let sourcefile = $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+$("#source-align-cell"+i).text();
+	    files[sourcefile] = "xml/"+$("#target-align-cell"+i).text();
+	    deleteids.push(i);
 	}
     }
     if (files != "") {
-	align_candidates(files.substring(0, files.length-1), deleteids);
+	align_candidates(files, deleteids);
     }
 });
 
@@ -397,6 +402,8 @@ function list_alignment_candidates() {
 };
 
 $("#find-align-candidates").on("click", function() {
+    $("#messages")[0].innerHTML = "";
+    $("#messages").append('<li>Started finding alignment candidates...</li>');
     $.getJSON("https://opus-repository.ling.helsinki.fi/find_alignment_candidates", {
 	corpus: $("#corpusname").text(),
 	branch: $("#choose-branch").val()
@@ -554,7 +561,7 @@ $("#settings").on("click", function() {
 let branchname = decodeURIComponent(window.location.search.substring(1)).split("&")[0].split("=")[1];
 
 if (branchname != undefined) {
-    $("#choose-branch").val(branch);
+    $("#choose-branch").val(branchname);
 }
 
 update_branch();
