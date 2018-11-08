@@ -1,13 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
 
+<ul id="messages">
+</ul>
+
 <div>
   <div style="padding: 20px; float: left">
     <b>My corpora</b>
     <form style="display: inline" action="/create_corpus"><input type="submit" value="+"></form>
     <ul id="corpora" style="padding-left: 0px">
       {% for corpus in corpora %}
-      <li><a href="/show_corpus/{{ corpus }}">{{ corpus }}</a></li>
+      <li id="corpus-li-{{ corpus }}" style="line-height: 200%"><a href="/show_corpus/{{ corpus }}">{{ corpus }}</a><button class="remove-corpus-button" corpusname="{{ corpus }}" style="float: right">-</button></li>
       {% endfor %}
   </div>
   <div style="padding: 20px; float: left">
@@ -15,7 +18,11 @@
     <form style="display: inline" action="/create_group"><input type="submit" value="+"></form>
     <ul id="groups" style="padding-left: 0px">
       {% for group in groups %}
-      <li>{{ group }}</li>
+      <li id="group-li-{{ group[0] }}" style="line-height: 200%">{{ group[0] }}
+	{% if group[1] == session.username %}
+	<button class="remove-group-button" groupname="{{ group }}" style="float: right">-</button>
+	{% endif %}
+      </li>
       {% endfor %}
   </div>
   <div style="padding: 20px; float: right">Search corpus: <input id="searchcorpus">

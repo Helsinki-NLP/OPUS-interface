@@ -129,26 +129,30 @@ class XmlParser:
                 key = ""
                 value = []
         return candidates
+
+    def getGroupOwner(self):
+        owner = "uknown"
+        for line in self.xmlData:
+            self.parseLine(line)
+            if self.start == "entry":
+                owner = self.attrs["owner"]
+                break
+        return owner
+
 """
 xml_data = '''
 <letsmt-ws version="56">
-  <list path="">
-    <entry path="oikeus8/mikkotest/xml/en/html/ajokielto.xml">
-      <align-candidates>xml/sv/html/ajokielto.xml,xml/fi/html/ajokielto.xml</align-candidates>
-      <gid>public</gid>
-      <imported_from>uploads/html.tar.gz:html/en/ajokielto.html</imported_from>
-      <language>en</language>
-      <owner>mikkotest</owner>
-      <parsed>ud/en/html/ajokielto.xml</parsed>
-      <resource-type>corpusfile</resource-type>
-      <size>38</size>
-      <status>updated</status>
+  <list path="/group/">
+    <entry id="newgroup" kind="group" owner="tiedeman">
+      <user>joerg</user>
+      <user>mikkotest</user>
+      <user>tiedeman</user>
     </entry>
   </list>
-  <status code="0" location="/metadata/oikeus8/mikkotest/xml/en/html/ajokielto.xml" operation="GET" type="ok">Found matching path ID. Listing all of its properties</status>
+  <status code="0" location="/group/newgroup" operation="GET" type="ok"></status>
 </letsmt-ws>
 '''
 
 parser = XmlParser(xml_data.split("\n"))
-print(parser.getAlignCandidates())
+print(parser.getGroupOwner())
 """

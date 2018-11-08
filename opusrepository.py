@@ -70,7 +70,14 @@ def index():
     groups = parser.groupsForUser()
     groups.sort()
 
-    return render_template("frontpage.html", corpora=corpora, groups=groups)
+    groupsAndOwners = []
+    for group in groups:
+        groupXml = rh.get("/group/"+group, {"uid": username})
+        parser = xml_parser.XmlParser(groupXml.split("\n"))
+        owner = parser.getGroupOwner()
+        groupsAndOwners.append((group, owner))
+
+    return render_template("frontpage.html", corpora=corpora, groups=groupsAndOwners)
 
 @app.route('/create_corpus', methods=["GET", "POST"])
 @login_required
@@ -115,6 +122,30 @@ def create_corpus():
         return redirect(url_for('show_corpus', corpusname=corpusName))
 
     return render_template("create_corpus.html", groups=groups, ftype="create", autoalignment=True)
+
+@app.route('/remove_corpus')
+@login_required
+def remove_corpus():
+    if session:
+        username = session['username']
+
+    corpusname = request.args.get("corpusname", "", type=str)
+        
+    response = rh.delete("/storage/"+corpusname+"/"+username, {"uid": username})
+
+    return jsonify(response=response)
+
+@app.route('/remove_group')
+@login_required
+def remove_group():
+    if session:
+        username = session['username']
+
+    groupname = request.args.get("groupname", "", type=str)
+
+    response = rh.delete("/group/"+groupname, {"uid": username})
+
+    return jsonify(response=response)
 
 @app.route('/corpus_settings/<corpusname>', methods=["GET", "POST"])
 @login_required
@@ -193,7 +224,7 @@ def create_group():
                 response = rh.put("/group/"+groupName+"/"+members[i], {"uid": username})
 
             flash('Group "' + groupName + '" created!')
-            return redirect(url_for('frontpage'))
+            return redirect(url_for('index'))
 
         return render_template("create_group.html", users=users)
     except:

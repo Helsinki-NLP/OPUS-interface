@@ -1,10 +1,12 @@
+let baseurl = "vm0024.kaj.pouta.csc.fi"
+
 function update_branch() {
     $(document).off();
     $("#uploads").text("");
     $("#monolingual").text("");
     $("#parallel").text("");
     $("#branch").val($("#choose-branch").val());
-    $.getJSON("https://opus-repository.ling.helsinki.fi/get_branch", {
+    $.getJSON("https://"+baseurl+"/get_branch", {
 	corpusname: $("#corpusname").text(),
 	branch: $("#choose-branch").val()
     }, function(data) {
@@ -36,7 +38,7 @@ function showMetadata(datapath) {
     $("#editmetadata").css("display", "none");
     let path = formulate_datapath(datapath);
     let inUploads = path.startsWith("/" + $("#corpusname").text() + "/" + $("#branch").val() + "/uploads/");
-    $.getJSON("https://opus-repository.ling.helsinki.fi/get_metadata", {
+    $.getJSON("https://"+baseurl+"/get_metadata", {
 	path: path
     }, function(data) {
 	$("#editmetadata").css("display", "inline");
@@ -88,7 +90,7 @@ function editMetadata(datapath) {
 		}
 	    }
 	    inputmn = 0;
-	    $.getJSON("https://opus-repository.ling.helsinki.fi/update_metadata", {
+	    $.getJSON("https://"+baseurl+"/update_metadata", {
 		changes: JSON.stringify(changedMetadata),
 		path: path
 	    }, function(data) {
@@ -109,7 +111,7 @@ function editMetadata(datapath) {
 function showFilecontent(datapath, windowid) {
     $(windowid).text("");
     let path = formulate_datapath(datapath);
-    $.getJSON("https://opus-repository.ling.helsinki.fi/get_filecontent", {
+    $.getJSON("https://"+baseurl+"/get_filecontent", {
 	path: path
     }, function(data) {
 	$(windowid).text(data.content);
@@ -118,7 +120,7 @@ function showFilecontent(datapath, windowid) {
 
 function importFile(datapath) {
     let path = formulate_datapath(datapath);
-    $.getJSON("https://opus-repository.ling.helsinki.fi/import_file", {
+    $.getJSON("https://"+baseurl+"/import_file", {
 	path: path
     }, function(data) {
 	$("#messages")[0].innerHTML = "";
@@ -131,7 +133,7 @@ function importFile(datapath) {
 function deleteFile(datapath, subdirname) {
     let path = formulate_datapath(datapath);
     if (confirm('Are you sure you want to delete "' + path + '"?')) {
-	$.getJSON("https://opus-repository.ling.helsinki.fi/delete_file", {
+	$.getJSON("https://"+baseurl+"/delete_file", {
 	    path: path
 	}, function(data) {
 	    $("#messages")[0].innerHTML = "";
@@ -150,10 +152,10 @@ function deleteFile(datapath, subdirname) {
 
 function downloadFile(datapath, filename) {
     let path = formulate_datapath(datapath);
-    window.location.href = "https://opus-repository.ling.helsinki.fi/download_file?path="+path+"&filename="+filename;
+    window.location.href = "https://"+baseurl+"/download_file?path="+path+"&filename="+filename;
     /*
     console.log(path, filename);
-    $.getJSON("https://opus-repository.ling.helsinki.fi/download_file", {
+    $.getJSON("https://"+baseurl+"/download_file", {
 	path: path,
 	filename: filename
     }, function(data) {
@@ -180,7 +182,7 @@ function subdir_to_list(directories, id_name){
 
 $("#searchcorpus").on("keyup", function() {
     if ($("#searchcorpus").val() != "") {
-	$.getJSON("https://opus-repository.ling.helsinki.fi/search", {
+	$.getJSON("https://"+baseurl+"/search", {
 	    corpusname: $("#searchcorpus").val()
 	}, function(data) {
 	    $("#searchresult")[0].innerHTML = "";
@@ -197,9 +199,9 @@ $("#clonebranch").on("click", function() {
     let corpusname = $("#corpusname").text();
     let branchclone = $("#choose-branch").val();
     let username = $("#username").text();
-    window.location.href = "https://opus-repository.ling.helsinki.fi/clone_branch?branch="+username+"&corpusname="+corpusname+"&branchclone="+branchclone;
+    window.location.href = "https://"+baseurl+"/clone_branch?branch="+username+"&corpusname="+corpusname+"&branchclone="+branchclone;
     /*
-    $.getJSON("https://opus-repository.ling.helsinki.fi/clone_branch", {
+    $.getJSON("https://"+baseurl+"/clone_branch", {
 	path: path
     }, function(data) {
 	console.log(data);
@@ -208,7 +210,7 @@ $("#clonebranch").on("click", function() {
 });
 
 function open_subdir(subdir) {
-    $.getJSON("https://opus-repository.ling.helsinki.fi/get_subdirs", {
+    $.getJSON("https://"+baseurl+"/get_subdirs", {
 	corpusname: $("#corpusname").text(),
 	branch: $("#choose-branch").val(),
 	subdir: "/"+subdir
@@ -281,7 +283,7 @@ function processAlignment(filename, subdir_id, subdir) {
 	let sourcefile = $("#source-align-cell"+linenumber).text();
 	let targetfile = $("#target-align-cell"+linenumber).text();
 	if (sourcefile != "" && targetfile != "") {
-	    $.getJSON("https://opus-repository.ling.helsinki.fi/add_alignment_candidate", {
+	    $.getJSON("https://"+baseurl+"/add_alignment_candidate", {
 		filename: $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+sourcefile,
 		add_candidate: "xml/"+targetfile
 	    }, function(data) {
@@ -317,7 +319,7 @@ function create_alignment_row() {
 function align_candidates(files, deleteids) {
     $("#messages")[0].innerHTML = "";
     $("#messages").append('<li>Started aligning files...</li>');
-    $.getJSON("https://opus-repository.ling.helsinki.fi/align_candidates", {
+    $.getJSON("https://"+baseurl+"/align_candidates", {
 	files: JSON.stringify(files)
     }, function(data) {
 	console.log(data)
@@ -360,7 +362,7 @@ $("#select-all-checkboxes").on("click", function() {
 function delete_alignment_row(deleteid) {
     let sourcefile = $("#source-align-cell"+deleteid).text();
     let targetfile = $("#target-align-cell"+deleteid).text();
-    $.getJSON("https://opus-repository.ling.helsinki.fi/remove_alignment_candidate", {
+    $.getJSON("https://"+baseurl+"/remove_alignment_candidate", {
 	filename: $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+sourcefile,
 	rm_candidate: "xml/"+targetfile
     }, function(data) {
@@ -382,7 +384,7 @@ function list_alignment_candidates() {
     $("#selected-align-files")[0].innerHTML = "";
     $("#align-all-selected").css("display", "none");
     $("#select-all-checkboxes").prop("checked", false);
-    $.getJSON("https://opus-repository.ling.helsinki.fi/list_alignment_candidates", {
+    $.getJSON("https://"+baseurl+"/list_alignment_candidates", {
 	corpus: $("#corpusname").text(),
 	branch: $("#choose-branch").val()
     }, function(data) {
@@ -404,7 +406,7 @@ function list_alignment_candidates() {
 $("#find-align-candidates").on("click", function() {
     $("#messages")[0].innerHTML = "";
     $("#messages").append('<li>Started finding alignment candidates...</li>');
-    $.getJSON("https://opus-repository.ling.helsinki.fi/find_alignment_candidates", {
+    $.getJSON("https://"+baseurl+"/find_alignment_candidates", {
 	corpus: $("#corpusname").text(),
 	branch: $("#choose-branch").val()
     }, function(data) {
@@ -457,7 +459,7 @@ function processFile(filename, path, root) {
 }
 
 function editAlignment(path) {
-    $.getJSON("https://opus-repository.ling.helsinki.fi/edit_alignment", {
+    $.getJSON("https://"+baseurl+"/edit_alignment", {
 	path: formulate_datapath(path)
     }, function(data) {
 	$("#messages")[0].innerHTML = "";
@@ -554,8 +556,36 @@ $("#close-alignment").on("click", function() {
     $("#file-structure-table").css("display", "");
 });
 
+$(".remove-corpus-button").on("click", function() {
+    let corpusname = $(this).attr("corpusname");
+    if (confirm('Are you sure you want to delete corpus "' + corpusname + '"?')) {
+	$.getJSON("https://"+baseurl+"/remove_corpus", {
+	    corpusname: corpusname
+	}, function(data) {
+	    console.log(data);
+	    $("#corpus-li-"+corpusname).remove();
+	    $("#messages")[0].innerHTML = "";
+	    $("#messages").append('<li>Deleted corpus "' + corpusname + '"</li>');
+	});
+    }
+});
+
+$(".remove-group-button").on("click", function() {
+    let groupname = $(this).attr("groupname");
+    if (confirm('Are you sure you want to delete group "' + groupname + '"?')) {
+	$.getJSON("https://"+baseurl+"/remove_group", {
+	    groupname: groupname
+	}, function(data) {
+	    console.log(data);
+	    $("#group-li-"+groupname).remove();
+	    $("#messages")[0].innerHTML = "";
+	    $("#messages").append('<li>Deleted group "' + groupname + '"</li>');
+	});
+    }
+});
+
 $("#settings").on("click", function() {
-    window.location.href = "https://opus-repository.ling.helsinki.fi/corpus_settings/" + $("#corpusname").text();
+    window.location.href = "https://"+baseurl+"/corpus_settings/" + $("#corpusname").text();
 });
 
 let branchname = decodeURIComponent(window.location.search.substring(1)).split("&")[0].split("=")[1];
