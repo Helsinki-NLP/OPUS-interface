@@ -1,4 +1,4 @@
-let baseurl = "opus-repository.ling.helsinki.fi"
+let baseurl = window.location.host
 
 function update_branch() {
     $(document).off();
