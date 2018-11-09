@@ -18,9 +18,9 @@
     <form style="display: inline" action="/create_group"><input type="submit" value="+"></form>
     <ul id="groups" style="padding-left: 0px">
       {% for group in groups %}
-      <li id="group-li-{{ group[0] }}" style="line-height: 200%">{{ group[0] }}
-	{% if group[1] == session.username %}
-	<button class="remove-group-button" groupname="{{ group }}" style="float: right">-</button>
+      <li id="group-li-{{ group[0] }}" style="line-height: 200%"><a href="/edit_group/{{ group[0] }}">{{ group[0] }}</a>
+	{% if group[1] == session.username and group[0] != session.username %}
+	<button class="remove-group-button" groupname="{{ group[0] }}" style="float: right">-</button>
 	{% endif %}
       </li>
       {% endfor %}

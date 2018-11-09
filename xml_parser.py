@@ -143,16 +143,15 @@ class XmlParser:
 xml_data = '''
 <letsmt-ws version="56">
   <list path="/group/">
-    <entry id="newgroup" kind="group" owner="tiedeman">
-      <user>joerg</user>
+    <entry id="grouptest" kind="group" owner="mikkotest">
       <user>mikkotest</user>
-      <user>tiedeman</user>
+      <user>mikkotest10</user>
     </entry>
   </list>
-  <status code="0" location="/group/newgroup" operation="GET" type="ok"></status>
+  <status code="0" location="/group/grouptest" operation="GET" type="ok"></status>
 </letsmt-ws>
 '''
 
 parser = XmlParser(xml_data.split("\n"))
-print(parser.getGroupOwner())
+print(parser.getUsers())
 """

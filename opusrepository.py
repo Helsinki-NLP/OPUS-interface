@@ -54,6 +54,12 @@ def login_required(f):
         
     return wrap
 
+def get_group_owner(group, username):
+    groupXml = rh.get("/group/"+group, {"uid": username})
+    parser = xml_parser.XmlParser(groupXml.split("\n"))
+    owner = parser.getGroupOwner()
+    return owner
+    
 @app.route('/')
 @login_required
 def index():
@@ -72,9 +78,7 @@ def index():
 
     groupsAndOwners = []
     for group in groups:
-        groupXml = rh.get("/group/"+group, {"uid": username})
-        parser = xml_parser.XmlParser(groupXml.split("\n"))
-        owner = parser.getGroupOwner()
+        owner = get_group_owner(group, username)
         groupsAndOwners.append((group, owner))
 
     return render_template("frontpage.html", corpora=corpora, groups=groupsAndOwners)
@@ -129,8 +133,7 @@ def remove_corpus():
     if session:
         username = session['username']
 
-    corpusname = request.args.get("corpusname", "", type=str)
-        
+    corpusname = request.args.get("tobedeleted", "", type=str)
     response = rh.delete("/storage/"+corpusname+"/"+username, {"uid": username})
 
     return jsonify(response=response)
@@ -141,8 +144,7 @@ def remove_group():
     if session:
         username = session['username']
 
-    groupname = request.args.get("groupname", "", type=str)
-
+    groupname = request.args.get("tobedeleted", "", type=str)
     response = rh.delete("/group/"+groupname, {"uid": username})
 
     return jsonify(response=response)
@@ -195,6 +197,16 @@ def corpus_settings(corpusname):
 
     return render_template("create_corpus.html", groups=groups, name=corpusname, domain=setting_fields["domain"], origin=setting_fields["origin"], description=setting_fields["description"], autoalignment=setting_fields["autoalignment"], ftype="settings")
 
+def get_group_members(group, username):
+    usersXml = rh.get("/group/"+group, {"uid": username, "action": "showinfo"})
+    parser = xml_parser.XmlParser(usersXml.split("\n"))
+    users = parser.getUsers()
+    for user in ["admin", username]:
+        if user in users:
+            users.remove(user)
+    users.sort()
+    return users
+
 @app.route('/create_group', methods=["GET", "POST"])
 @login_required
 def create_group():
@@ -202,31 +214,54 @@ def create_group():
         if session:
             username = session['username']
 
-        usersXml = rh.get("/group/public", {"uid": username, "action": "showinfo"})
-        parser = xml_parser.XmlParser(usersXml.split("\n"))
-        users = parser.getUsers()
-        for user in users:
-            if user in ["admin", username]:
-                users.remove(user)
-        users.sort()
+        users = get_group_members("public", username)
 
         if request.method == "POST":
             groupName = request.form["name"]
+            members = request.form["members"].split(",")[:-1]
+                        
             if groupName == "" or " " in groupName or not all(ord(char) < 128 for char in groupName):
                 flash("Name must be ASCII only and must not contain spaces")
-                return render_template("create_group.html", name=request.form['name'], description=request.form['description'], users=users)
+                return render_template("create_group.html", name=request.form['name'], members=members, users=users, owner=True)
 
             response = rh.post("/group/"+groupName, {"uid": username})
             
-            members = request.form["members"].split(",")
-
-            for i in range(len(members)-1):
-                response = rh.put("/group/"+groupName+"/"+members[i], {"uid": username})
+            for member in members:
+                response = rh.put("/group/"+groupName+"/"+member, {"uid": username})
 
             flash('Group "' + groupName + '" created!')
             return redirect(url_for('index'))
 
-        return render_template("create_group.html", users=users)
+        return render_template("create_group.html", users=users, owner=True)
+    except:
+        traceback.print_exc()
+
+@app.route('/edit_group/<groupname>', methods=["GET", "POST"])
+@login_required
+def edit_group(groupname):
+    try:
+        if session:
+            username = session['username']
+            
+        users = get_group_members("public", username)
+        current_members = get_group_members(groupname, username)
+        groupowner = get_group_owner(groupname, username)
+        owner = groupowner == username
+        if groupname == username:
+            owner = False
+
+        if request.method == "POST":
+            for member in current_members:
+                response = rh.delete("/group/"+groupname+"/"+member, {"uid": username})
+
+            members = request.form["members"].split(",")[:-1]
+            for member in members:
+                response = rh.put("/group/"+groupname+"/"+member, {"uid": username})
+
+            flash('Changes saved!')
+            return redirect(url_for('edit_group', groupname=groupname))
+
+        return render_template("create_group.html", users=users, name=groupname, members=current_members, owner=owner, edit=True)
     except:
         traceback.print_exc()
 
