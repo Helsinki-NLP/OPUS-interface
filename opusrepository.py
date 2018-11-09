@@ -520,11 +520,21 @@ def get_subdirs():
 @login_required
 def upload_file():
     try:
+        if session:
+            username = session['username']
+
         if request.method == 'POST':
             path = request.form['path']
             m = re.search("^\/(.*?)\/(.*?)\/", path)
-            corpus = m.group(1)
-            branch = m.group(2)
+            if m:
+                corpus = m.group(1)
+                branch = m.group(2)
+                if branch != username:
+                    flash("Invalid branch name")
+                    return redirect(url_for("upload_file", corpus=corpus, branch=username))
+            else:
+                flash("Invalid upload path")
+                return redirect(url_for("index"))
             language = ""
             if "language" in request.form.keys():
                 language = request.form['language']
@@ -549,8 +559,6 @@ def upload_file():
                 path = request.form['path']
                 description = request.form['description']
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], timename))
-                if session:
-                    username = session['username']
 
                 ret = rh.upload("/storage" + path, {"uid": username}, UPLOAD_FOLDER+"/"+timename)
 
@@ -562,7 +570,7 @@ def upload_file():
                 os.remove(UPLOAD_FOLDER + "/" + timename)
                 flash('Uploaded file "' + filename + '" to "' + path + '"')
 
-                return redirect(url_for('show_corpus', corpusname=corpus, branch=branch))
+                return redirect(url_for('upload_file', corpus=corpus, branch=branch))
 
         return render_template("upload_file.html", formats=["txt", "html", "pdf", "doc", "tar"], languages=["da", "en", "fi", "no", "sv"])
     except:

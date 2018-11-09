@@ -1,4 +1,4 @@
-let baseurl = "vm0024.kaj.pouta.csc.fi"
+let baseurl = window.location.host
 
 function update_branch() {
     $(document).off();
