@@ -556,32 +556,27 @@ $("#close-alignment").on("click", function() {
     $("#file-structure-table").css("display", "");
 });
 
-$(".remove-corpus-button").on("click", function() {
-    let corpusname = $(this).attr("corpusname");
-    if (confirm('Are you sure you want to delete corpus "' + corpusname + '"?')) {
-	$.getJSON("https://"+baseurl+"/remove_corpus", {
-	    corpusname: corpusname
+function delete_item(tobedeleted, itemtype){
+    if (confirm('Are you sure you want to delete ' + itemtype +' "' + tobedeleted + '"?')) {
+	$.getJSON("https://"+baseurl+"/remove_"+itemtype, {
+	    tobedeleted: tobedeleted
 	}, function(data) {
 	    console.log(data);
-	    $("#corpus-li-"+corpusname).remove();
+	    $("#"+itemtype+"-li-"+tobedeleted).remove();
 	    $("#messages")[0].innerHTML = "";
-	    $("#messages").append('<li>Deleted corpus "' + corpusname + '"</li>');
+	    $("#messages").append('<li>Deleted ' + itemtype +' "' + tobedeleted + '"</li>');
 	});
     }
+}
+
+$(".remove-corpus-button").on("click", function() {
+    let corpusname = $(this).attr("corpusname");
+    delete_item(corpusname, "corpus");
 });
 
 $(".remove-group-button").on("click", function() {
     let groupname = $(this).attr("groupname");
-    if (confirm('Are you sure you want to delete group "' + groupname + '"?')) {
-	$.getJSON("https://"+baseurl+"/remove_group", {
-	    groupname: groupname
-	}, function(data) {
-	    console.log(data);
-	    $("#group-li-"+groupname).remove();
-	    $("#messages")[0].innerHTML = "";
-	    $("#messages").append('<li>Deleted group "' + groupname + '"</li>');
-	});
-    }
+    delete_item(groupname, "group");
 });
 
 $("#settings").on("click", function() {
