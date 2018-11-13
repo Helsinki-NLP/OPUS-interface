@@ -1,4 +1,4 @@
-let baseurl = window.location.host
+let baseurl = window.location.protocol + "//" + window.location.host
 
 function update_branch() {
     $(document).off();
@@ -6,7 +6,7 @@ function update_branch() {
     $("#monolingual").text("");
     $("#parallel").text("");
     $("#branch").val($("#choose-branch").val());
-    $.getJSON("https://"+baseurl+"/get_branch", {
+    $.getJSON(baseurl+"/get_branch", {
 	corpusname: $("#corpusname").text(),
 	branch: $("#choose-branch").val()
     }, function(data) {
@@ -38,7 +38,7 @@ function showMetadata(datapath) {
     $("#editmetadata").css("display", "none");
     let path = formulate_datapath(datapath);
     let inUploads = path.startsWith("/" + $("#corpusname").text() + "/" + $("#branch").val() + "/uploads/");
-    $.getJSON("https://"+baseurl+"/get_metadata", {
+    $.getJSON(baseurl+"/get_metadata", {
 	path: path
     }, function(data) {
 	$("#editmetadata").css("display", "inline");
@@ -90,7 +90,7 @@ function editMetadata(datapath) {
 		}
 	    }
 	    inputmn = 0;
-	    $.getJSON("https://"+baseurl+"/update_metadata", {
+	    $.getJSON(baseurl+"/update_metadata", {
 		changes: JSON.stringify(changedMetadata),
 		path: path
 	    }, function(data) {
@@ -111,7 +111,7 @@ function editMetadata(datapath) {
 function showFilecontent(datapath, windowid) {
     $(windowid).text("");
     let path = formulate_datapath(datapath);
-    $.getJSON("https://"+baseurl+"/get_filecontent", {
+    $.getJSON(baseurl+"/get_filecontent", {
 	path: path
     }, function(data) {
 	$(windowid).text(data.content);
@@ -120,7 +120,7 @@ function showFilecontent(datapath, windowid) {
 
 function importFile(datapath) {
     let path = formulate_datapath(datapath);
-    $.getJSON("https://"+baseurl+"/import_file", {
+    $.getJSON(baseurl+"/import_file", {
 	path: path
     }, function(data) {
 	$("#messages")[0].innerHTML = "";
@@ -133,7 +133,7 @@ function importFile(datapath) {
 function deleteFile(datapath, subdirname) {
     let path = formulate_datapath(datapath);
     if (confirm('Are you sure you want to delete "' + path + '"?')) {
-	$.getJSON("https://"+baseurl+"/delete_file", {
+	$.getJSON(baseurl+"/delete_file", {
 	    path: path
 	}, function(data) {
 	    $("#messages")[0].innerHTML = "";
@@ -152,10 +152,10 @@ function deleteFile(datapath, subdirname) {
 
 function downloadFile(datapath, filename) {
     let path = formulate_datapath(datapath);
-    window.location.href = "https://"+baseurl+"/download_file?path="+path+"&filename="+filename;
+    window.location.href = baseurl+"/download_file?path="+path+"&filename="+filename;
     /*
     console.log(path, filename);
-    $.getJSON("https://"+baseurl+"/download_file", {
+    $.getJSON(baseurl+"/download_file", {
 	path: path,
 	filename: filename
     }, function(data) {
@@ -182,7 +182,7 @@ function subdir_to_list(directories, id_name){
 
 $("#searchcorpus").on("keyup", function() {
     if ($("#searchcorpus").val() != "") {
-	$.getJSON("https://"+baseurl+"/search", {
+	$.getJSON(baseurl+"/search", {
 	    corpusname: $("#searchcorpus").val()
 	}, function(data) {
 	    $("#searchresult")[0].innerHTML = "";
@@ -199,9 +199,9 @@ $("#clonebranch").on("click", function() {
     let corpusname = $("#corpusname").text();
     let branchclone = $("#choose-branch").val();
     let username = $("#username").text();
-    window.location.href = "https://"+baseurl+"/clone_branch?branch="+username+"&corpusname="+corpusname+"&branchclone="+branchclone;
+    window.location.href = baseurl+"/clone_branch?branch="+username+"&corpusname="+corpusname+"&branchclone="+branchclone;
     /*
-    $.getJSON("https://"+baseurl+"/clone_branch", {
+    $.getJSON(baseurl+"/clone_branch", {
 	path: path
     }, function(data) {
 	console.log(data);
@@ -210,7 +210,7 @@ $("#clonebranch").on("click", function() {
 });
 
 function open_subdir(subdir) {
-    $.getJSON("https://"+baseurl+"/get_subdirs", {
+    $.getJSON(baseurl+"/get_subdirs", {
 	corpusname: $("#corpusname").text(),
 	branch: $("#choose-branch").val(),
 	subdir: "/"+subdir
@@ -283,7 +283,7 @@ function processAlignment(filename, subdir_id, subdir) {
 	let sourcefile = $("#source-align-cell"+linenumber).text();
 	let targetfile = $("#target-align-cell"+linenumber).text();
 	if (sourcefile != "" && targetfile != "") {
-	    $.getJSON("https://"+baseurl+"/add_alignment_candidate", {
+	    $.getJSON(baseurl+"/add_alignment_candidate", {
 		filename: $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+sourcefile,
 		add_candidate: "xml/"+targetfile
 	    }, function(data) {
@@ -319,7 +319,7 @@ function create_alignment_row() {
 function align_candidates(files, deleteids) {
     $("#messages")[0].innerHTML = "";
     $("#messages").append('<li>Started aligning files...</li>');
-    $.getJSON("https://"+baseurl+"/align_candidates", {
+    $.getJSON(baseurl+"/align_candidates", {
 	files: JSON.stringify(files)
     }, function(data) {
 	console.log(data)
@@ -362,7 +362,7 @@ $("#select-all-checkboxes").on("click", function() {
 function delete_alignment_row(deleteid) {
     let sourcefile = $("#source-align-cell"+deleteid).text();
     let targetfile = $("#target-align-cell"+deleteid).text();
-    $.getJSON("https://"+baseurl+"/remove_alignment_candidate", {
+    $.getJSON(baseurl+"/remove_alignment_candidate", {
 	filename: $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+sourcefile,
 	rm_candidate: "xml/"+targetfile
     }, function(data) {
@@ -384,7 +384,7 @@ function list_alignment_candidates() {
     $("#selected-align-files")[0].innerHTML = "";
     $("#align-all-selected").css("display", "none");
     $("#select-all-checkboxes").prop("checked", false);
-    $.getJSON("https://"+baseurl+"/list_alignment_candidates", {
+    $.getJSON(baseurl+"/list_alignment_candidates", {
 	corpus: $("#corpusname").text(),
 	branch: $("#choose-branch").val()
     }, function(data) {
@@ -406,7 +406,7 @@ function list_alignment_candidates() {
 $("#find-align-candidates").on("click", function() {
     $("#messages")[0].innerHTML = "";
     $("#messages").append('<li>Started finding alignment candidates...</li>');
-    $.getJSON("https://"+baseurl+"/find_alignment_candidates", {
+    $.getJSON(baseurl+"/find_alignment_candidates", {
 	corpus: $("#corpusname").text(),
 	branch: $("#choose-branch").val()
     }, function(data) {
@@ -459,7 +459,7 @@ function processFile(filename, path, root) {
 }
 
 function editAlignment(path) {
-    $.getJSON("https://"+baseurl+"/edit_alignment", {
+    $.getJSON(baseurl+"/edit_alignment", {
 	path: formulate_datapath(path)
     }, function(data) {
 	$("#messages")[0].innerHTML = "";
@@ -558,7 +558,7 @@ $("#close-alignment").on("click", function() {
 
 function delete_item(tobedeleted, itemtype){
     if (confirm('Are you sure you want to delete ' + itemtype +' "' + tobedeleted + '"?')) {
-	$.getJSON("https://"+baseurl+"/remove_"+itemtype, {
+	$.getJSON(baseurl+"/remove_"+itemtype, {
 	    tobedeleted: tobedeleted
 	}, function(data) {
 	    console.log(data);
@@ -580,7 +580,7 @@ $(".remove-group-button").on("click", function() {
 });
 
 $("#settings").on("click", function() {
-    window.location.href = "https://"+baseurl+"/corpus_settings/" + $("#corpusname").text();
+    window.location.href = baseurl+"/corpus_settings/" + $("#corpusname").text();
 });
 
 let branchname = decodeURIComponent(window.location.search.substring(1)).split("&")[0].split("=")[1];
