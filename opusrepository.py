@@ -30,8 +30,9 @@ app = Flask(__name__)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-with open("secrets/secretkey") as f:
-    key = f.read()[:-1].encode("utf-8")
+#with open("secrets/secretkey") as f:
+#    key = f.read()[:-1].encode("utf-8")
+key = os.environ["SECRETKEY"]
 app.secret_key = key
 
 letsmt_connect = "curl --silent --show-error --cacert /var/www/cert/vm1637.kaj.pouta.csc.fi/ca.crt --cert /var/www/cert/vm1637.kaj.pouta.csc.fi/user/certificates/developers@localhost.crt:letsmt --key /var/www/cert/vm1637.kaj.pouta.csc.fi/user/keys/developers@localhost.key"
