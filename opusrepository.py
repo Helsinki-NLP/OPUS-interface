@@ -18,8 +18,6 @@ from urllib.parse import urlparse, urljoin
 import request_handler
 import json
 
-import traceback
-
 rh = request_handler.RequestHandler()
 
 UPLOAD_FOLDER = "/home/cloud-user/uploads"
@@ -30,8 +28,6 @@ app = Flask(__name__)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-#with open("secrets/secretkey") as f:
-#    key = f.read()[:-1].encode("utf-8")
 key = os.environ["SECRETKEY"]
 app.secret_key = key
 
@@ -110,18 +106,15 @@ def create_corpus():
             parameters["gid"] = request.form["group"]
         response = rh.put("/storage/"+corpusName+"/"+username, parameters)
 
-        try:
-            parameters = {"uid": username}
-            for key in request.form.keys():
-                if key in ["origin", "domain", "description"]:
-                    parameters[key] = request.form[key]
+        parameters = {"uid": username}
+        for key in request.form.keys():
+            if key in ["origin", "domain", "description"]:
+                parameters[key] = request.form[key]
 
-            if "autoalignment" not in request.form.keys():
-                parameters["ImportPara_autoalign"] = "off"
+        if "autoalignment" not in request.form.keys():
+            parameters["ImportPara_autoalign"] = "off"
 
-            response = rh.put("/metadata/"+corpusName+"/"+username, parameters)
-        except:
-            traceback.print_exc()
+        response = rh.put("/metadata/"+corpusName+"/"+username, parameters)
             
         flash('Corpus "' + corpusName + '" created!')
         return redirect(url_for('show_corpus', corpusname=corpusName))
@@ -180,18 +173,15 @@ def corpus_settings(corpusname):
         if request.form["group"] != "public":
             parameters["gid"] = request.form["group"]
 
-        try:
-            parameters["ImportPara_autoalign"] = "on"
-            if "autoalignment" not in request.form.keys():
-                parameters["ImportPara_autoalign"] = "off"
-                
-            for key in request.form.keys():
-                if key in ["origin", "domain", "description"]:
-                    parameters[key] = request.form[key]
+        parameters["ImportPara_autoalign"] = "on"
+        if "autoalignment" not in request.form.keys():
+            parameters["ImportPara_autoalign"] = "off"
+            
+        for key in request.form.keys():
+            if key in ["origin", "domain", "description"]:
+                parameters[key] = request.form[key]
 
-            response = rh.post("/metadata/"+corpusname+"/"+username, parameters)
-        except:
-            traceback.print_exc()
+        response = rh.post("/metadata/"+corpusname+"/"+username, parameters)
             
         flash('Corpus settings saved!')
         return redirect(url_for('show_corpus', corpusname=corpusname))
@@ -211,121 +201,106 @@ def get_group_members(group, username):
 @app.route('/create_group', methods=["GET", "POST"])
 @login_required
 def create_group():
-    try:
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        users = get_group_members("public", username)
+    users = get_group_members("public", username)
 
-        if request.method == "POST":
-            groupName = request.form["name"]
-            members = request.form["members"].split(",")[:-1]
-                        
-            if groupName == "" or " " in groupName or not all(ord(char) < 128 for char in groupName):
-                flash("Name must be ASCII only and must not contain spaces")
-                return render_template("create_group.html", name=request.form['name'], members=members, users=users, owner=True)
+    if request.method == "POST":
+        groupName = request.form["name"]
+        members = request.form["members"].split(",")[:-1]
+                    
+        if groupName == "" or " " in groupName or not all(ord(char) < 128 for char in groupName):
+            flash("Name must be ASCII only and must not contain spaces")
+            return render_template("create_group.html", name=request.form['name'], members=members, users=users, owner=True)
 
-            response = rh.post("/group/"+groupName, {"uid": username})
-            
-            for member in members:
-                response = rh.put("/group/"+groupName+"/"+member, {"uid": username})
+        response = rh.post("/group/"+groupName, {"uid": username})
+        
+        for member in members:
+            response = rh.put("/group/"+groupName+"/"+member, {"uid": username})
 
-            flash('Group "' + groupName + '" created!')
-            return redirect(url_for('index'))
+        flash('Group "' + groupName + '" created!')
+        return redirect(url_for('index'))
 
-        return render_template("create_group.html", users=users, owner=True)
-    except:
-        traceback.print_exc()
+    return render_template("create_group.html", users=users, owner=True)
 
 @app.route('/edit_group/<groupname>', methods=["GET", "POST"])
 @login_required
 def edit_group(groupname):
-    try:
-        if session:
-            username = session['username']
-            
-        users = get_group_members("public", username)
-        current_members = get_group_members(groupname, username)
-        groupowner = get_group_owner(groupname, username)
-        owner = groupowner == username
-        if groupname == username:
-            owner = False
+    if session:
+        username = session['username']
+        
+    users = get_group_members("public", username)
+    current_members = get_group_members(groupname, username)
+    groupowner = get_group_owner(groupname, username)
+    owner = groupowner == username
+    if groupname == username:
+        owner = False
 
-        if request.method == "POST":
-            for member in current_members:
-                response = rh.delete("/group/"+groupname+"/"+member, {"uid": username})
+    if request.method == "POST":
+        for member in current_members:
+            response = rh.delete("/group/"+groupname+"/"+member, {"uid": username})
 
-            members = request.form["members"].split(",")[:-1]
-            for member in members:
-                response = rh.put("/group/"+groupname+"/"+member, {"uid": username})
+        members = request.form["members"].split(",")[:-1]
+        for member in members:
+            response = rh.put("/group/"+groupname+"/"+member, {"uid": username})
 
-            flash('Changes saved!')
-            return redirect(url_for('edit_group', groupname=groupname))
+        flash('Changes saved!')
+        return redirect(url_for('edit_group', groupname=groupname))
 
-        return render_template("create_group.html", users=users, name=groupname, members=current_members, owner=owner, edit=True)
-    except:
-        traceback.print_exc()
+    return render_template("create_group.html", users=users, name=groupname, members=current_members, owner=owner, edit=True)
 
 @app.route('/show_corpus/<corpusname>')
 @login_required
 def show_corpus(corpusname):
-    try:
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        branchesXml = rh.get("/storage/"+corpusname, {"uid": username})
-        parser = xml_parser.XmlParser(branchesXml.split("\n"))
-        branches = parser.branchesForCorpus()
-        branches.sort()
-        
-        clone = False
-        if username not in branches:
-            clone = True
-    except:
-        traceback.print_exc()
+    branchesXml = rh.get("/storage/"+corpusname, {"uid": username})
+    parser = xml_parser.XmlParser(branchesXml.split("\n"))
+    branches = parser.branchesForCorpus()
+    branches.sort()
+    
+    clone = False
+    if username not in branches:
+        clone = True
     
     return render_template("show_corpus.html", name=corpusname, branches=branches, clone=clone)
 
 @app.route('/download/<filename>')
 def download(filename):
-    try:
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        ret = rh.get("/storage/mikkoslot/xml/en/html/"+filename, {"uid": username, "action": "download", "archive": "0"})
-        timename = str(time.time())+"###TIME###"+filename
-        global previous_download
-        if previous_download != "":
-            os.remove(download_folder+"/"+previous_download)
-        previous_download = timename
-        with open(download_folder+"/"+timename, "w") as f:
-            f.write(ret)
-        return send_file(download_folder+"/"+timename, attachment_filename=filename)
-    except:
-        traceback.print_exc()
+    ret = rh.get("/storage/mikkoslot/xml/en/html/"+filename, {"uid": username, "action": "download", "archive": "0"})
+    timename = str(time.time())+"###TIME###"+filename
+    global previous_download
+    if previous_download != "":
+        os.remove(download_folder+"/"+previous_download)
+    previous_download = timename
+    with open(download_folder+"/"+timename, "w") as f:
+        f.write(ret)
+    return send_file(download_folder+"/"+timename, attachment_filename=filename)
 
 @app.route('/download_file')
 @login_required
 def download_file():
-    try:
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        path = request.args.get("path", "", type=str)
-        filename = request.args.get("filename", "", type=str)
+    path = request.args.get("path", "", type=str)
+    filename = request.args.get("filename", "", type=str)
 
-        ret = rh.get("/storage"+path, {"uid": username, "action": "download", "archive": "0"})
+    ret = rh.get("/storage"+path, {"uid": username, "action": "download", "archive": "0"})
 
-        timename = str(time.time())+"###TIME###"+filename
-        global previous_download
-        if previous_download != "":
-            os.remove(download_folder+"/"+previous_download)
-        previous_download = timename
-        with open(download_folder+"/"+timename, "w") as f:
-            f.write(ret)
-        return send_from_directory(download_folder+"/", timename, as_attachment=True, attachment_filename=filename)
-    except:
-        traceback.print_exc()
+    timename = str(time.time())+"###TIME###"+filename
+    global previous_download
+    if previous_download != "":
+        os.remove(download_folder+"/"+previous_download)
+    previous_download = timename
+    with open(download_folder+"/"+timename, "w") as f:
+        f.write(ret)
+    return send_from_directory(download_folder+"/", timename, as_attachment=True, attachment_filename=filename)
         
 @app.route('/clone_branch')
 @login_required
@@ -354,63 +329,54 @@ def clone_branch():
 @app.route('/search')
 @login_required
 def search():
-    try:
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        corpusname = request.args.get("corpusname", "", type=str)
+    corpusname = request.args.get("corpusname", "", type=str)
 
-        corporaXml = rh.get("/metadata", {"uid": username, "resource-type": "branch", "INCLUDES_slot": corpusname})
-        
-        parser = xml_parser.XmlParser(corporaXml.split("\n"))
-        unsorted = parser.corporaForUser()
+    corporaXml = rh.get("/metadata", {"uid": username, "resource-type": "branch", "INCLUDES_slot": corpusname})
+    
+    parser = xml_parser.XmlParser(corporaXml.split("\n"))
+    unsorted = parser.corporaForUser()
 
-        starts = []
-        contains = []
-        for corpus in unsorted:
-            if corpus.startswith(corpusname):
-                starts.append(corpus)
-            else:
-                contains.append(corpus)
-                
-        starts.sort()
-        contains.sort()
-        
-        corpora = starts + contains
+    starts = []
+    contains = []
+    for corpus in unsorted:
+        if corpus.startswith(corpusname):
+            starts.append(corpus)
+        else:
+            contains.append(corpus)
+            
+    starts.sort()
+    contains.sort()
+    
+    corpora = starts + contains
 
-        return jsonify(result=corpora)
-    except:
-        traceback.print_exc()
+    return jsonify(result=corpora)
 
 @app.route('/update_metadata')
 @login_required
 def update_metadata():
-    try:
-        if session:
-            username = session['username']
-        path = request.args.get("path", "", type=str)
-        metadata = request.args.get("changes", "", type=str)
-        metadata = json.loads(metadata)
+    if session:
+        username = session['username']
+    path = request.args.get("path", "", type=str)
+    metadata = request.args.get("changes", "", type=str)
+    metadata = json.loads(metadata)
 
-        metadata["uid"] = username
-        response = rh.post("/metadata"+path, metadata)
+    metadata["uid"] = username
+    response = rh.post("/metadata"+path, metadata)
 
-        return jsonify(response=response)
-    except:
-        traceback.print_exc()
+    return jsonify(response=response)
         
 @app.route('/edit_alignment')
 @login_required
 def edit_alignment():
-    try:
-        if session:
-            username = session['username']
-        path = request.args.get("path", "", type=str)
-        response = rh.put("/job"+path, {"uid": username, "run": "setup_isa"})
+    if session:
+        username = session['username']
+    path = request.args.get("path", "", type=str)
+    response = rh.put("/job"+path, {"uid": username, "run": "setup_isa"})
 
-        return jsonify(response=response, username=username)
-    except:
-        traceback.print_exc()
+    return jsonify(response=response, username=username)
            
 @app.route('/letsmtui', methods=['GET', 'POST'])
 @login_required
@@ -430,11 +396,8 @@ def letsmtui():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], timename))
             if session:
                 username = session['username']
-            try:
-                command = letsmt_connect.split() + ["-X", "PUT", letsmt_url + directory + "?uid=" + username, "--form", "payload=@/var/www/uploads/"+timename]
-                ret = sp.Popen(command , stdout=sp.PIPE).stdout.read().decode("utf-8")
-            except:
-                traceback.print_exc()
+            command = letsmt_connect.split() + ["-X", "PUT", letsmt_url + directory + "?uid=" + username, "--form", "payload=@/var/www/uploads/"+timename]
+            ret = sp.Popen(command , stdout=sp.PIPE).stdout.read().decode("utf-8")
             os.remove("/var/www/uploads/" + timename)
             flash("Uploaded file " + filename + " to " + directory)
             return redirect(url_for('letsmtui', directory=directory))
@@ -443,159 +406,142 @@ def letsmtui():
 @app.route('/letsmt')
 @login_required
 def letsmt():
-    try:
-        ret = ""
+    ret = ""
 
-        method = request.args.get("method", "GET", type=str)
-        command = request.args.get("command", "/storage", type=str)
-        action = request.args.get("action", "", type=str)
-        payload = request.args.get("payload", "", type=str)
-        if payload != "":
-            payload = " --form payload=@/var/www/uploads/" + payload
-        username = ""
-        if session:
-            username = session['username']
-        ret = sp.Popen(letsmt_connect.split() + ["-X", method, letsmt_url+command+"?uid=" + username + action + payload], stdout=sp.PIPE).stdout.read().decode("utf-8")
-        return jsonify(result=ret)
-    except Exception:
-        traceback.print_exc()
-
+    method = request.args.get("method", "GET", type=str)
+    command = request.args.get("command", "/storage", type=str)
+    action = request.args.get("action", "", type=str)
+    payload = request.args.get("payload", "", type=str)
+    if payload != "":
+        payload = " --form payload=@/var/www/uploads/" + payload
+    username = ""
+    if session:
+        username = session['username']
+    ret = sp.Popen(letsmt_connect.split() + ["-X", method, letsmt_url+command+"?uid=" + username + action + payload], stdout=sp.PIPE).stdout.read().decode("utf-8")
+    return jsonify(result=ret)
 
 @app.route('/get_branch')
 @login_required
 def get_branch():
-    try:
-        uploads = []
-        monolingual = []
-        parallel = []
-        
-        branch = request.args.get("branch", "", type=str)
-        corpusname = request.args.get("corpusname", "", type=str)
+    uploads = []
+    monolingual = []
+    parallel = []
+    
+    branch = request.args.get("branch", "", type=str)
+    corpusname = request.args.get("corpusname", "", type=str)
 
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        uploadsContents = rh.get("/storage/"+corpusname+"/"+branch+"/uploads", {"uid": username})
-        parser = xml_parser.XmlParser(uploadsContents.split("\n"))
-        uploads = parser.navigateDirectory()
+    uploadsContents = rh.get("/storage/"+corpusname+"/"+branch+"/uploads", {"uid": username})
+    parser = xml_parser.XmlParser(uploadsContents.split("\n"))
+    uploads = parser.navigateDirectory()
 
-        xmlContents = rh.get("/metadata/"+corpusname+"/"+branch, {"uid": username})
-        parser = xml_parser.XmlParser(xmlContents.split("\n"))
-        monolingual, parallel = parser.getMonolingualAndParallel()
-        monolingual.sort()
-        parallel.sort()
-        
-        return jsonify(uploads=uploads, parallel=parallel, monolingual=monolingual)
-    except Exception:
-        traceback.print_exc()
+    xmlContents = rh.get("/metadata/"+corpusname+"/"+branch, {"uid": username})
+    parser = xml_parser.XmlParser(xmlContents.split("\n"))
+    monolingual, parallel = parser.getMonolingualAndParallel()
+    monolingual.sort()
+    parallel.sort()
+    
+    return jsonify(uploads=uploads, parallel=parallel, monolingual=monolingual)
 
 @app.route('/get_subdirs')
 @login_required
 def get_subdirs():
-    try:
-        subdirs = []
-        
-        branch = request.args.get("branch", "", type=str)
-        corpusname = request.args.get("corpusname", "", type=str)
-        subdir = request.args.get("subdir", "", type=str)
+    subdirs = []
+    
+    branch = request.args.get("branch", "", type=str)
+    corpusname = request.args.get("corpusname", "", type=str)
+    subdir = request.args.get("subdir", "", type=str)
 
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        subdir = subdir.replace("-_-", "/")
-        subdir = subdir.replace("monolingual", "xml")
-        subdir = subdir.replace("align-source-files", "xml")
-        subdir = subdir.replace("align-target-files", "xml")
-        subdir = subdir.replace("parallel", "xml")
+    subdir = subdir.replace("-_-", "/")
+    subdir = subdir.replace("monolingual", "xml")
+    subdir = subdir.replace("align-source-files", "xml")
+    subdir = subdir.replace("align-target-files", "xml")
+    subdir = subdir.replace("parallel", "xml")
 
-        subdirContents = rh.get("/storage/"+corpusname+"/"+branch+subdir, {"uid": username})
-        parser = xml_parser.XmlParser(subdirContents.split("\n"))
-        subdirs = parser.navigateDirectory()
-        subdirs.sort()
-        
-        return jsonify(subdirs=subdirs)
-    except Exception:
-        traceback.print_exc()
+    subdirContents = rh.get("/storage/"+corpusname+"/"+branch+subdir, {"uid": username})
+    parser = xml_parser.XmlParser(subdirContents.split("\n"))
+    subdirs = parser.navigateDirectory()
+    subdirs.sort()
+    
+    return jsonify(subdirs=subdirs)
 
 @app.route('/upload_file', methods=['GET', 'POST'])
 @login_required
 def upload_file():
-    try:
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        if request.method == 'POST':
+    if request.method == 'POST':
+        path = request.form['path']
+        m = re.search("^\/(.*?)\/(.*?)\/", path)
+        if m:
+            corpus = m.group(1)
+            branch = m.group(2)
+            if branch != username:
+                flash("Invalid branch name")
+                return redirect(url_for("upload_file", corpus=corpus, branch=username))
+        else:
+            flash("Invalid upload path")
+            return redirect(url_for("index"))
+        language = ""
+        if "language" in request.form.keys():
+            language = request.form['language']
+        fileformat = request.form['format']
+        description = request.form['description']
+        direction = "unknown"
+        autoimport = "false"
+        if "direction" in request.form.keys():
+            direction = request.form["direction"]
+        if "autoimport" in request.form.keys():
+            autoimport = "true"
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, fileformat=fileformat, description=description, direction=direction, autoimport=autoimport))
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, fileformat=fileformat, description=description, direction=direction, autoimport=autoimport))
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            timename = str(time.time())+"###TIME###"+filename
             path = request.form['path']
-            m = re.search("^\/(.*?)\/(.*?)\/", path)
-            if m:
-                corpus = m.group(1)
-                branch = m.group(2)
-                if branch != username:
-                    flash("Invalid branch name")
-                    return redirect(url_for("upload_file", corpus=corpus, branch=username))
-            else:
-                flash("Invalid upload path")
-                return redirect(url_for("index"))
-            language = ""
-            if "language" in request.form.keys():
-                language = request.form['language']
-            fileformat = request.form['format']
             description = request.form['description']
-            direction = "unknown"
-            autoimport = "false"
-            if "direction" in request.form.keys():
-                direction = request.form["direction"]
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], timename))
+
+            ret = rh.upload("/storage" + path, {"uid": username}, UPLOAD_FOLDER+"/"+timename)
+
             if "autoimport" in request.form.keys():
-                autoimport = "true"
-            if 'file' not in request.files:
-                flash('No file part')
-                return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, fileformat=fileformat, description=description, direction=direction, autoimport=autoimport))
-            file = request.files['file']
-            if file.filename == '':
-                flash('No selected file')
-                return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, fileformat=fileformat, description=description, direction=direction, autoimport=autoimport))
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                timename = str(time.time())+"###TIME###"+filename
-                path = request.form['path']
-                description = request.form['description']
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], timename))
+                response = rh.put("/job"+path, {"uid": username, "run": "import"})
 
-                ret = rh.upload("/storage" + path, {"uid": username}, UPLOAD_FOLDER+"/"+timename)
+            response = rh.put("/metadata"+path, {"uid": username, "description": description, "direction": direction})
 
-                if "autoimport" in request.form.keys():
-                    response = rh.put("/job"+path, {"uid": username, "run": "import"})
+            os.remove(UPLOAD_FOLDER + "/" + timename)
+            flash('Uploaded file "' + filename + '" to "' + path + '"')
 
-                response = rh.put("/metadata"+path, {"uid": username, "description": description, "direction": direction})
+            return redirect(url_for('upload_file', corpus=corpus, branch=branch))
 
-                os.remove(UPLOAD_FOLDER + "/" + timename)
-                flash('Uploaded file "' + filename + '" to "' + path + '"')
-
-                return redirect(url_for('upload_file', corpus=corpus, branch=branch))
-
-        return render_template("upload_file.html", formats=["txt", "html", "pdf", "doc", "tar"], languages=["da", "en", "fi", "no", "sv"])
-    except:
-        traceback.print_exc()
+    return render_template("upload_file.html", formats=["txt", "html", "pdf", "doc", "tar"], languages=["da", "en", "fi", "no", "sv"])
         
 @app.route('/get_metadata')
 @login_required
 def get_metadata():
-    try:
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        path = request.args.get("path", "", type=str)
+    path = request.args.get("path", "", type=str)
 
-        metadataXml = rh.get("/metadata"+path, {"uid": username})
-        parser = xml_parser.XmlParser(metadataXml.split("\n"))
-        metadata = parser.getMetadata()
-        metadataKeys = list(metadata.keys()).copy()
-        metadataKeys.sort()
+    metadataXml = rh.get("/metadata"+path, {"uid": username})
+    parser = xml_parser.XmlParser(metadataXml.split("\n"))
+    metadata = parser.getMetadata()
+    metadataKeys = list(metadata.keys()).copy()
+    metadataKeys.sort()
 
-        return jsonify(metadata = metadata, metadataKeys = metadataKeys, username = username)
-
-    except:
-        traceback.print_exc()
+    return jsonify(metadata = metadata, metadataKeys = metadataKeys, username = username)
 
 @app.route('/get_filecontent')
 @login_required
@@ -633,37 +579,31 @@ def delete_file():
 @app.route('/list_alignment_candidates')
 @login_required
 def list_alignment_candidates():
-    try:
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        corpus = request.args.get("corpus", "", type=str)
-        branch = request.args.get("branch", "", type=str)
+    corpus = request.args.get("corpus", "", type=str)
+    branch = request.args.get("branch", "", type=str)
 
-        candidates_xml = rh.get("/metadata/"+corpus+"/"+branch, {"uid": username, "ENDS_WITH_align-candidates": "xml", "type": "recursive", "action": "list_all"})
-        parser = xml_parser.XmlParser(candidates_xml.split("\n"))
-        candidates = parser.getAlignCandidates()
-        file_list = list(candidates.keys())
-        file_list.sort()
-        return jsonify(candidates = candidates, file_list = file_list)
-    except:
-        traceback.print_exc()
+    candidates_xml = rh.get("/metadata/"+corpus+"/"+branch, {"uid": username, "ENDS_WITH_align-candidates": "xml", "type": "recursive", "action": "list_all"})
+    parser = xml_parser.XmlParser(candidates_xml.split("\n"))
+    candidates = parser.getAlignCandidates()
+    file_list = list(candidates.keys())
+    file_list.sort()
+    return jsonify(candidates = candidates, file_list = file_list)
 
 @app.route('/find_alignment_candidates')
 @login_required
 def find_alignment_candidates():
-    try:
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        corpus = request.args.get("corpus", "", type=str)
-        branch = request.args.get("branch", "", type=str)
+    corpus = request.args.get("corpus", "", type=str)
+    branch = request.args.get("branch", "", type=str)
 
-        response = rh.put("/job/"+corpus+"/"+branch+"/xml", {"uid": username, "run": "detect_translations"})
+    response = rh.put("/job/"+corpus+"/"+branch+"/xml", {"uid": username, "run": "detect_translations"})
 
-        return jsonify(content = response)
-    except:
-        traceback.print_exc()
+    return jsonify(content = response)
     
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
@@ -673,57 +613,48 @@ def is_safe_url(target):
 @app.route('/remove_alignment_candidate')
 @login_required
 def remove_alignment_candidate():
-    try:
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        filename = request.args.get("filename", "", type=str)
-        rm_candidate = request.args.get("rm_candidate", "", type=str)
+    filename = request.args.get("filename", "", type=str)
+    rm_candidate = request.args.get("rm_candidate", "", type=str)
 
-        candidates_xml = rh.get("/metadata/"+filename, {"uid": username})
-        parser = xml_parser.XmlParser(candidates_xml.split("\n"))
-        candidates = parser.getAlignCandidates()
-        temp_candidates = candidates[list(candidates.keys())[0]]
-        cur_candidates = ["xml/"+c for c in temp_candidates]
-        cur_candidates.remove(rm_candidate)
-        response = rh.post("/metadata/"+filename, {"uid": username, "align-candidates": ",".join(cur_candidates)})
+    candidates_xml = rh.get("/metadata/"+filename, {"uid": username})
+    parser = xml_parser.XmlParser(candidates_xml.split("\n"))
+    candidates = parser.getAlignCandidates()
+    temp_candidates = candidates[list(candidates.keys())[0]]
+    cur_candidates = ["xml/"+c for c in temp_candidates]
+    cur_candidates.remove(rm_candidate)
+    response = rh.post("/metadata/"+filename, {"uid": username, "align-candidates": ",".join(cur_candidates)})
 
-        return jsonify(content=response)
-    except:
-        traceback.print_exc()
+    return jsonify(content=response)
 
 @app.route('/add_alignment_candidate')
 @login_required
 def add_alignment_candidate():
-    try:
-        if session:
-            username = session['username']
+    if session:
+        username = session['username']
 
-        filename = request.args.get("filename", "", type=str)
-        add_candidate = request.args.get("add_candidate", "", type=str)
+    filename = request.args.get("filename", "", type=str)
+    add_candidate = request.args.get("add_candidate", "", type=str)
 
-        response = rh.put("/metadata/"+filename, {"uid": username, "align-candidates": add_candidate})
+    response = rh.put("/metadata/"+filename, {"uid": username, "align-candidates": add_candidate})
 
-        return jsonify(content=response)
-    except:
-        traceback.print_exc()
+    return jsonify(content=response)
 
 @app.route('/align_candidates')
 @login_required
 def align_candidates():
-    try:
-        if session:
-            username = session['username']
-        filesdata = request.args.get("files", "", type=str)
+    if session:
+        username = session['username']
+    filesdata = request.args.get("files", "", type=str)
 
-        files = json.loads(filesdata);
+    files = json.loads(filesdata);
 
-        for filename in files.keys():
-            response = rh.put("/job/"+filename, {"uid": username, "trg": files[filename], "run": "align"})
+    for filename in files.keys():
+        response = rh.put("/job/"+filename, {"uid": username, "trg": files[filename], "run": "align"})
 
-        return jsonify(content=response)
-    except:
-        traceback.print_exc()
+    return jsonify(content=response)
 
 @app.route('/login/', methods=["GET", "POST"])
 def login_page():
