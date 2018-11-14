@@ -10,7 +10,8 @@
     <form style="display: inline" action="/create_corpus"><input type="submit" value="+"></form>
     <ul id="corpora" style="padding-left: 0px">
       {% for corpus in corpora %}
-      <li id="corpus-li-{{ corpus }}" style="line-height: 200%"><a href="/show_corpus/{{ corpus }}">{{ corpus }}</a><button class="remove-corpus-button" corpusname="{{ corpus }}" style="float: right">-</button></li>
+      <li id="corpus-li-{{ corpus }}"><a href="/show_corpus/{{ corpus }}">{{ corpus }}</a>
+      <button class="remove-item-button" corpusname="{{ corpus }}">X</button></li>
       {% endfor %}
   </div>
   <div style="padding: 20px; float: left">
@@ -18,9 +19,9 @@
     <form style="display: inline" action="/create_group"><input type="submit" value="+"></form>
     <ul id="groups" style="padding-left: 0px">
       {% for group in groups %}
-      <li id="group-li-{{ group[0] }}" style="line-height: 200%"><a href="/edit_group/{{ group[0] }}">{{ group[0] }}</a>
+      <li id="group-li-{{ group[0] }}"><a href="/edit_group/{{ group[0] }}">{{ group[0] }}</a>
 	{% if group[1] == session.username and group[0] != session.username %}
-	<button class="remove-group-button" groupname="{{ group[0] }}" style="float: right">-</button>
+	<button class="remove-item-button" groupname="{{ group[0] }}">X</button>
 	{% endif %}
       </li>
       {% endfor %}

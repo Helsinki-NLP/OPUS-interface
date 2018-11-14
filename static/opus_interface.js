@@ -569,14 +569,14 @@ function delete_item(tobedeleted, itemtype){
     }
 }
 
-$(".remove-corpus-button").on("click", function() {
+$(".remove-item-button").on("click", function() {
     let corpusname = $(this).attr("corpusname");
-    delete_item(corpusname, "corpus");
-});
-
-$(".remove-group-button").on("click", function() {
     let groupname = $(this).attr("groupname");
-    delete_item(groupname, "group");
+    if (corpusname) {
+        delete_item(corpusname, "corpus");
+    } else if (groupname) {
+        delete_item(groupname, "group");
+    }
 });
 
 $("#settings").on("click", function() {

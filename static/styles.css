@@ -106,3 +106,10 @@ table.borders td {
     height: 100%;
     overflow: auto;
 }
+
+.remove-item-button {
+    height: 19px;
+    padding: 0;
+    font-size: 9px;
+    float: right;
+}
