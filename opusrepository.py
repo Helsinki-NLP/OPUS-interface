@@ -17,14 +17,18 @@ import re
 from urllib.parse import urlparse, urljoin
 import request_handler
 import json
+import cgi
 
 rh = request_handler.RequestHandler()
 
+app = Flask(__name__)
+
 UPLOAD_FOLDER = "/home/cloud-user/uploads"
 download_folder= "/home/cloud-user/downloads"
-ALLOWED_EXTENSIONS = set(['txt', 'xml', 'html', 'tar', 'gz'])
+ALLOWED_EXTENSIONS = set(['pdf', 'doc', 'txt', 'xml', 'html', 'tar', 'gz'])
 
-app = Flask(__name__)
+with open(app.root_path+"/iso639-1.dat", "rb") as f:
+    iso639_1 = pickle.load(f)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -362,9 +366,14 @@ def update_metadata():
     path = request.args.get("path", "", type=str)
     metadata = request.args.get("changes", "", type=str)
     metadata = json.loads(metadata)
+    
+    for key in metadata.keys():
+        metadata[key] = cgi.escape(metadata[key])
+        print(metadata[key])
 
     metadata["uid"] = username
     response = rh.post("/metadata"+path, metadata)
+    print(response)
 
     return jsonify(response=response)
         
@@ -491,7 +500,6 @@ def upload_file():
         language = ""
         if "language" in request.form.keys():
             language = request.form['language']
-        fileformat = request.form['format']
         description = request.form['description']
         direction = "unknown"
         autoimport = "false"
@@ -501,11 +509,11 @@ def upload_file():
             autoimport = "true"
         if 'file' not in request.files:
             flash('No file part')
-            return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, fileformat=fileformat, description=description, direction=direction, autoimport=autoimport))
+            return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, description=description, direction=direction, autoimport=autoimport))
         file = request.files['file']
         if file.filename == '':
             flash('No selected file')
-            return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, fileformat=fileformat, description=description, direction=direction, autoimport=autoimport))
+            return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, description=description, direction=direction, autoimport=autoimport))
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             timename = str(time.time())+"###TIME###"+filename
@@ -524,8 +532,11 @@ def upload_file():
             flash('Uploaded file "' + filename + '" to "' + path + '"')
 
             return redirect(url_for('upload_file', corpus=corpus, branch=branch))
+        else:
+            flash('File format is not allowed')
+            return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, fileformat=fileformat, description=description, direction=direction, autoimport=autoimport))
 
-    return render_template("upload_file.html", formats=["txt", "html", "pdf", "doc", "tar"], languages=["da", "en", "fi", "no", "sv"])
+    return render_template("upload_file.html", languages=iso639_1)
         
 @app.route('/get_metadata')
 @login_required

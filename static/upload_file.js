@@ -1,5 +1,5 @@
 function updatePath() {
-    if ($("#format").val() == "tar") {
+    if ($("#file").val().replace(/.*?\./, "").toLowerCase().indexOf(".tar") >= 0) {
 	$("#language").attr("disabled", "");
     } else {
 	$("#language").removeAttr("disabled");
@@ -7,14 +7,12 @@ function updatePath() {
 
     if ($("#language").attr("disabled") == "disabled") {
 	$("#path").val("/"+corpus+"/"+branch+"/uploads/"+$("#file").val().replace(/.*\\/, ""));
+    } else if ($("#language").val() == "detect") {
+	$("#path").val("/"+corpus+"/"+branch+"/uploads/"+$("#file").val().replace(/.*?\./, "")+"/"+$("#file").val().replace(/.*\\/, ""));
     } else {
-	$("#path").val("/"+corpus+"/"+branch+"/uploads/"+$("#format").val()+"/"+$("#language").val()+"/"+$("#file").val().replace(/.*\\/, ""));
+	$("#path").val("/"+corpus+"/"+branch+"/uploads/"+$("#file").val().replace(/.*?\./, "")+"/"+$("#language").val()+"/"+$("#file").val().replace(/.*\\/, ""));
     }
 }
-
-$("#format").on("change", function() {
-    updatePath();
-});
 
 $("#language").on("change", function() {
     updatePath();
@@ -30,12 +28,12 @@ for (i=0; i<url.length; i++) {
     let urlParam = url[i].split("=");
     if (urlParam[0] == "corpus") {
 	var corpus = urlParam[1];
+    $("#back-link").attr("href", "/show_corpus/"+corpus);
+    $("#back-link").text("Back to "+corpus);
     } else if (urlParam[0] == "branch") {
 	var branch = urlParam[1];
     } else if (urlParam[0] == "language") {
 	$("#language").val(urlParam[1]);
-    } else if (urlParam[0] == "fileformat") {
-	$("#format").val(urlParam[1]);
     } else if (urlParam[0] == "description") {
 	$("#description").val(urlParam[1]);
     } else if (urlParam[0] == "direction" && urlParam[1] == "original") {

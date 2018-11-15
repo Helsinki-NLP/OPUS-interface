@@ -4,6 +4,8 @@
 <ul id="messages">
 </ul>
 
+<a id="back-link" href="/">Back to</a>
+
 <h3>Upload file</h3>
 
 <form id="upload_form" method="post" enctype="multipart/form-data" style="padding: 20px">
@@ -13,29 +15,12 @@
       <td><input id="file" type="file" name="file"></td>
     </tr>
     <tr>
-      <td align="right">file format:</td>
-      <td>
-	<select id="format" name="format" form="upload_form">
-	  {% for format in formats %}
-	  {% if format == selectedformat %}
-	  <option value="{{ format }}" selected>{{ format }}</option>
-	  {% else %}
-	  <option value="{{ format }}">{{ format }}</option>
-	  {% endif %}
-	  {% endfor %}
-	</select>
-      </td>
-    </tr>
-    <tr>
       <td align="right">language:</td>
       <td>
 	<select id="language" name="language" form="upload_form">
+      <option value="detect" selected>detect</option>
 	  {% for language in languages %}
-	  {% if language == selectedlanguage %}
-	  <option value="{{ language }}" selected>{{ language }}</option>
-	  {% else %}
-	  <option value="{{ language }}">{{ language }}</option>
-	  {% endif %}
+	  <option value="{{ language[0] }}">{{ language[1] }}</option>
 	  {% endfor %}
 	</select>
       </td>
