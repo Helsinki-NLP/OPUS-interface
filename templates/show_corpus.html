@@ -18,8 +18,10 @@
       </select>
       {% if clone %}
       <button id="clonebranch" style="margin-left: 20px">clone</button>
-      {% endif %}
+      {% else %}
       <button id="settings" style="margin-left: 20px">settings</button>
+      {% endif %}
+      <button id="refresh" style="margin-left: 20px">refresh</button>
     </div>
   </div>
   <div style="padding: 20px; float: right">Search corpus: <input id="searchcorpus">

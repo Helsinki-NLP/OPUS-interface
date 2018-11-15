@@ -583,6 +583,10 @@ $("#settings").on("click", function() {
     window.location.href = baseurl+"/corpus_settings/" + $("#corpusname").text();
 });
 
+$("#refresh").on("click", function() {
+    update_branch()
+});
+
 let branchname = decodeURIComponent(window.location.search.substring(1)).split("&")[0].split("=")[1];
 
 if (branchname != undefined) {
