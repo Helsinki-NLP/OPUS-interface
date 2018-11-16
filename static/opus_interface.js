@@ -435,10 +435,15 @@ function processFile(filename, path, root) {
 	    showOrHideTrees("uploads", "monolingual", "parallel", "hide");
 	    $("#editalignment").css("display", "inline");
 	}
-	$("#viewfile").off("click");
-	$("#viewfile").on("click", function() {
-	    switchMetadataAndContent(path);
-	});
+    if (root.startsWith("uploads")) {
+        $("#viewfile").css("display", "none");
+    } else {
+        $("#viewfile").css("display", "");
+        $("#viewfile").off("click");
+        $("#viewfile").on("click", function() {
+            switchMetadataAndContent(path);
+        });
+    }
 	$("#deletefile").off("click");
 	$("#deletefile").on("click", function() {
 	    deleteFile(path, subdirname);

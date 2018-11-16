@@ -41,6 +41,11 @@ letsmt_url = "https://vm1637.kaj.pouta.csc.fi:443/ws"
 
 previous_download = ""
 
+pdf_reader_options = ["tika", "standard", "raw", "layout", "combinded"]
+document_alignment_options = ["identical-names", "similar-names"]
+sentence_alignment_options = ["one-to-one", "length-based", "hunalign", "bisent"]
+sentence_splitter_options = ["europarl", "lingua", "udpipe", "opennlp"]
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -95,35 +100,160 @@ def create_corpus():
     groups = parser.groupsForUser()
     groups.sort()
 
+    field_dict = {
+        "group": "gid",
+        "domain": "domain",
+        "origin": "origin",
+        "description": "description",
+        "pdf_reader": "ImportPara_mode",
+        "document_alignment": "AlignPara_search_parallel",
+        "sentence_alignment": "AlignPara_method",
+        "sentence_splitter": "ImportPara_splitter"
+    }
+    setting_fields = {
+        "group": "public",
+        "domain": "",
+        "origin": "",
+        "description": "",
+        "pdf_reader": "tika",
+        "document_alignment": "identical-names",
+        "sentence_alignment": "bisent",
+        "sentence_splitter" : "udpipe"
+    }
+    
+    setting_fields["autoalignment"] = True
+    setting_fields["autoparsing"] = True
+    setting_fields["autowordalign"] = True
+
+    autodict = {"autoalignment": "ImportPara_autoalign",
+    "autoparsing": "ImportPara_autoparse",
+    "autowordalign": "ImportPara_autowordalign"}
+
     if request.method == "POST":
         print(request.form)
         corpusName = request.form["name"]
         if corpusName == "" or " " in corpusName or not all(ord(char) < 128 for char in corpusName):
-            autoalignment = False
-            if "autoalignment" in request.form.keys():
-                autoalignment = True
+
+            setting_fields = {
+                "group": request.form["group"],
+                "domain": request.form["domain"],
+                "description": request.form["description"],
+                "pdf_reader": request.form["pdf_reader"],
+                "document_alignment": request.form["document_alignment"],
+                "sentence_alignment": request.form["sentence_alignment"],
+                "sentence_splitter": request.form["sentence_splitter"],
+                "origin": request.form["origin"]
+            }
+
+            for key in autodict.keys():
+                setting_fields[key] =  False
+                if key in request.form.keys() and request.form[key] == "on":
+                    setting_fields[key] = True
+
             flash("Name must be ASCII only and must not contain spaces")
-            return render_template("create_corpus.html", groups=groups, name=request.form['name'], domain=request.form['domain'], origin=request.form['origin'], description=request.form['description'], selectedgroup=request.form['group'], autoalignment=autoalignment, ftype="create")
+            return render_template("create_corpus.html", groups=groups, name=request.form['name'], settings=setting_fields, ftype="create", pdf_reader_options = pdf_reader_options, document_alignment_options = document_alignment_options, sentence_alignment_options = sentence_alignment_options, sentence_splitter_options = sentence_splitter_options)
 
         parameters = {"uid": username}
-        if request.form["group"] != "public":
-            parameters["gid"] = request.form["group"]
+
         response = rh.put("/storage/"+corpusName+"/"+username, parameters)
 
         parameters = {"uid": username}
         for key in request.form.keys():
-            if key in ["origin", "domain", "description"]:
-                parameters[key] = request.form[key]
+            if key in field_dict.keys():
+                parameters[field_dict[key]] = request.form[key]
 
-        if "autoalignment" not in request.form.keys():
-            parameters["ImportPara_autoalign"] = "off"
+        for key in autodict.keys():
+            if key not in request.form.keys():
+                parameters[autodict[key]] = "off"
+            else:
+                parameters[autodict[key]] = "on"
 
         response = rh.put("/metadata/"+corpusName+"/"+username, parameters)
             
         flash('Corpus "' + corpusName + '" created!')
         return redirect(url_for('show_corpus', corpusname=corpusName))
 
-    return render_template("create_corpus.html", groups=groups, ftype="create", autoalignment=True)
+    return render_template("create_corpus.html", groups=groups, ftype="create", settings=setting_fields, pdf_reader_options = pdf_reader_options, document_alignment_options = document_alignment_options, sentence_alignment_options = sentence_alignment_options, sentence_splitter_options = sentence_splitter_options)
+
+@app.route('/corpus_settings/<corpusname>', methods=["GET", "POST"])
+@login_required
+def corpus_settings(corpusname):
+    if session:
+        username = session['username']
+
+    groupsXml = rh.get("/group/"+username, {"uid": username, "action": "showinfo"})
+    parser = xml_parser.XmlParser(groupsXml.split("\n"))
+    groups = parser.groupsForUser()
+    groups.sort()
+
+    metadataXml = rh.get("/metadata/"+corpusname+"/"+username, {"uid": username})
+    parser = xml_parser.XmlParser(metadataXml.split("\n"))
+    metadata = parser.getMetadata()
+
+    field_dict = {
+        "group": "gid",
+        "domain": "domain",
+        "origin": "origin",
+        "description": "description",
+        "pdf_reader": "ImportPara_mode",
+        "document_alignment": "AlignPara_search_parallel",
+        "sentence_alignment": "AlignPara_method",
+        "sentence_splitter": "ImportPara_splitter"
+    }
+
+    setting_fields = {
+        "group": "public",
+        "domain": "",
+        "origin": "",
+        "description": "",
+        "pdf_reader": "tika",
+        "document_alignment": "identical-names",
+        "sentence_alignment": "bisent",
+        "sentence_splitter" : "udpipe"
+    } 
+
+    for key in field_dict.keys():
+        if field_dict[key] in metadata.keys():
+            setting_fields[key] = metadata[field_dict[key]]
+
+    setting_fields["autoalignment"] = False
+    setting_fields["autoparsing"] = False
+    setting_fields["autowordalign"] = False
+
+    autodict = {"autoalignment": "ImportPara_autoalign",
+    "autoparsing": "ImportPara_autoparse",
+    "autowordalign": "ImportPara_autowordalign"}
+    
+    for key in autodict.keys():
+        if autodict[key] not in metadata.keys() or (autodict[key] in metadata.keys() and metadata[autodict[key]] == "on"):
+            setting_fields[key] = True
+    
+    print(setting_fields)
+    if request.method == "POST":
+        print(request.form)
+        parameters = {"uid": username}
+        if request.form["group"] != "public":
+            parameters["gid"] = request.form["group"]
+
+        parameters["ImportPara_autoalign"] = "on"
+        parameters["ImportPara_autoparse"] = "on"
+        parameters["ImportPara_autowordalign"] = "on"
+
+        for key in autodict.keys():
+            if key not in request.form.keys():
+                parameters[autodict[key]] = "off"
+            
+        for key in field_dict.keys():
+            if key in request.form.keys():
+                parameters[field_dict[key]] = request.form[key]
+
+        print(parameters)
+        response = rh.post("/metadata/"+corpusname+"/"+username, parameters)
+            
+        flash('Corpus settings saved!')
+        return redirect(url_for('show_corpus', corpusname=corpusname))
+ 
+    return render_template("create_corpus.html", groups=groups, name=corpusname, settings=setting_fields, ftype="settings", pdf_reader_options = pdf_reader_options, document_alignment_options = document_alignment_options, sentence_alignment_options = sentence_alignment_options, sentence_splitter_options = sentence_splitter_options)
 
 @app.route('/remove_corpus')
 @login_required
@@ -146,51 +276,6 @@ def remove_group():
     response = rh.delete("/group/"+groupname, {"uid": username})
 
     return jsonify(response=response)
-
-@app.route('/corpus_settings/<corpusname>', methods=["GET", "POST"])
-@login_required
-def corpus_settings(corpusname):
-    if session:
-        username = session['username']
-
-    groupsXml = rh.get("/group/"+username, {"uid": username, "action": "showinfo"})
-    parser = xml_parser.XmlParser(groupsXml.split("\n"))
-    groups = parser.groupsForUser()
-    groups.sort()
-
-    metadataXml = rh.get("/metadata/"+corpusname+"/"+username, {"uid": username})
-    parser = xml_parser.XmlParser(metadataXml.split("\n"))
-    metadata = parser.getMetadata()
-
-    setting_fields = {"domain": "", "origin": "", "description": ""}
-    for key in setting_fields.keys():
-        if key in metadata.keys():
-            setting_fields[key] = metadata[key]
-
-    setting_fields["autoalignment"] = False
-    if "ImportPara_autoalign" not in metadata.keys() or ("ImportPara_autoalign" in metadata.keys() and metadata["ImportPara_autoalign"] == "on"):
-        setting_fields["autoalignment"] = True
-    
-    if request.method == "POST":
-        print(request.form)
-        parameters = {"uid": username}
-        if request.form["group"] != "public":
-            parameters["gid"] = request.form["group"]
-
-        parameters["ImportPara_autoalign"] = "on"
-        if "autoalignment" not in request.form.keys():
-            parameters["ImportPara_autoalign"] = "off"
-            
-        for key in request.form.keys():
-            if key in ["origin", "domain", "description"]:
-                parameters[key] = request.form[key]
-
-        response = rh.post("/metadata/"+corpusname+"/"+username, parameters)
-            
-        flash('Corpus settings saved!')
-        return redirect(url_for('show_corpus', corpusname=corpusname))
-
-    return render_template("create_corpus.html", groups=groups, name=corpusname, domain=setting_fields["domain"], origin=setting_fields["origin"], description=setting_fields["description"], autoalignment=setting_fields["autoalignment"], ftype="settings")
 
 def get_group_members(group, username):
     usersXml = rh.get("/group/"+group, {"uid": username, "action": "showinfo"})

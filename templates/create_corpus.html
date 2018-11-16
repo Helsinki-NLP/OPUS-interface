@@ -13,53 +13,78 @@
       <td align="right">name:</td>
       <td><input type="text" name="name" value="{{ name }}" {% if ftype == "settings" %}readonly{% endif %}></td>
       <td align="right">description:</td>
-      <td rowspan="4"><textarea rows="10" cols="40" name="description">{{ description }}</textarea></td>
+      <td rowspan="4"><textarea rows="10" cols="40" name="description">{{ settings["description"] }}</textarea></td>
     </tr>
     <tr>
       <td align="right">read access:</td>
       <td>
-	<select name="group" form="corpus_form">
+	<select name="group">
 	  {% for group in groups %}
-	  {% if group == selectedgroup %}
-	  <option value="{{ group }}" selected>{{ group }}</option>
-	  {% elif group == "public" %}
-	  <option value="{{ group }}" selected>{{ group }}</option>
-	  {% else %}
-	  <option value="{{ group }}">{{ group }}</option>
-	  {% endif %}
+	  <option value="{{ group }}" {% if group == settings["group"] %}selected{% endif %}>{{ group }}</option>
 	  {% endfor %}
 	</select>
       </td>
     </tr>
     <tr>
       <td align="right">domain:</td>
-      <td><input type="text" name="domain" value="{{ domain }}"></td>
+      <td><input type="text" name="domain" value="{{ settings["domain"] }}"></td>
     </tr>
     <tr>
       <td align="right">origin:</td>
-      <td><input type="text" name="origin" value="{{ origin }}"></td>
+      <td><input type="text" name="origin" value="{{ settings["origin"] }}"></td>
     </tr>
     <tr style="height: 40px"></tr>
     <tr>
       <td align="right">automatic alignment:</td>
-      <td><input type="checkbox" name="autoalignment" {% if autoalignment %}checked{% endif %}></td>
-      <td align="right">automatic import:</td>
-      <td><input type="checkbox"></td>
+      <td><input type="checkbox" name="autoalignment" {% if settings["autoalignment"] %}checked{% endif %}></td>
+      <td align="right">automatic parsing:</td>
+      <td><input type="checkbox" name="autoparsing" {% if settings["autoparsing"] %}checked{% endif %}></td>
+    </tr>
+    <tr>
+      <td align="right">automatic wordalign:</td>
+      <td><input type="checkbox" name="autowordalign" {% if settings["autowordalign"] %}checked{% endif %}></td>
     </tr>
     <tr>
       <td align="right">document alignment:</td>
-      <td><select><option>testoption</option></select></td>
+      <td>
+        <select name="document_alignment">
+          {% for option in document_alignment_options %}
+          <option value="{{ option }}" {% if option == settings["document_alignment"] %}selected{% endif %}>{{ option }}</option>
+          {% endfor %}
+        </select>
+      </td>
       <td align="right">PDF reader:</td>
-      <td><select><option>testoption</option></select></td>
+      <td>
+        <select name="pdf_reader">
+          {% for option in pdf_reader_options %}
+          <option value="{{ option }}" {% if option == settings["pdf_reader"] %}selected{% endif %}>{{ option }}</option>
+          {% endfor %}
+        </select>
+      </td>
     </tr>
     <tr>
       <td align="right">sentence alignment:</td>
-      <td><select><option>testoption</option></select></td>
+      <td>
+      <select name="sentence_alignment">
+        {% for option in sentence_alignment_options %}
+        <option value="{{ option }}" {% if option == settings["sentence_alignment"] %}selected{% endif %}>{{ option }}</option>
+        {% endfor %}
+      </select>
+      </td> 
+      <td align="right">sentence splitter:</td>
+      <td>
+      <select name="sentence_splitter">
+        {% for option in sentence_splitter_options %}
+        <option value="{{ option }}" {% if option == settings["sentence_splitter"] %}selected{% endif %}>{{ option }}</option>
+        {% endfor %}
+      </select>
+      </td> 
     </tr>
     <tr>
       <td></td>
       <td><input type="submit" name="submit" value="{% if ftype == "create" %}Create{% elif ftype == "settings" %}Save{% endif %}"></td>
     </tr>
   </table>
+</form>
 
 {% endblock %}
