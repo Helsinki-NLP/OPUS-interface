@@ -41,7 +41,7 @@ letsmt_url = "https://vm1637.kaj.pouta.csc.fi:443/ws"
 
 previous_download = ""
 
-pdf_reader_options = ["tika", "standard", "raw", "layout", "combinded"]
+pdf_reader_options = ["tika", "standard", "raw", "layout", "combined"]
 document_alignment_options = ["identical-names", "similar-names"]
 sentence_alignment_options = ["one-to-one", "length-based", "hunalign", "bisent"]
 sentence_splitter_options = ["europarl", "lingua", "udpipe", "opennlp"]
