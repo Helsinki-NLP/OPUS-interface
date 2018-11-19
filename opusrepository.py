@@ -35,16 +35,14 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 key = os.environ["SECRETKEY"]
 app.secret_key = key
 
-letsmt_connect = "curl --silent --show-error --cacert /var/www/cert/vm1637.kaj.pouta.csc.fi/ca.crt --cert /var/www/cert/vm1637.kaj.pouta.csc.fi/user/certificates/developers@localhost.crt:letsmt --key /var/www/cert/vm1637.kaj.pouta.csc.fi/user/keys/developers@localhost.key"
-
-letsmt_url = "https://vm1637.kaj.pouta.csc.fi:443/ws"
-
 previous_download = ""
 
-pdf_reader_options = ["tika", "standard", "raw", "layout", "combined"]
-document_alignment_options = ["identical-names", "similar-names"]
-sentence_alignment_options = ["one-to-one", "length-based", "hunalign", "bisent"]
-sentence_splitter_options = ["europarl", "lingua", "udpipe", "opennlp"]
+corpus_creation_options = {
+    "pdf_reader_options": ["tika", "standard", "raw", "layout", "combined"],
+    "document_alignment_options": ["identical-names", "similar-names"],
+    "sentence_alignment_options": ["one-to-one", "length-based", "hunalign", "bisent"],
+    "sentence_splitter_options": ["europarl", "lingua", "udpipe", "opennlp"]
+}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -66,20 +64,31 @@ def get_group_owner(group, username):
     owner = parser.getGroupOwner()
     return owner
     
+def get_from_api_and_parse(path, parameters, function):
+    rawXml = rh.get(path, parameters)
+    parser = xml_parser.XmlParser(rawXml.split("\n"))
+    parser_functions = {
+        "corporaForUser": parser.corporaForUser,
+        "groupsForUser": parser.groupsForUser,
+        "getMetadata": parser.getMetadata,
+        "getUsers": parser.getUsers,
+        "branchesForCorpus": parser.branchesForCorpus,
+        "navigateDirectory": parser.navigateDirectory,
+        "getMonolingualAndParallel": parser.getMonolingualAndParallel,
+        "getAlignCandidates": parser.getAlignCandidates
+    }
+    data = parser_functions[function]()
+    return data
+
 @app.route('/')
 @login_required
 def index():
     if session:
         username = session['username']
 
-    corporaXml = rh.get("/metadata", {"uid": username, "owner": username, "resource-type": "branch"})
-    parser = xml_parser.XmlParser(corporaXml.split("\n"))
-    corpora = parser.corporaForUser()
+    corpora = get_from_api_and_parse("/metadata", {"uid": username, "owner": username, "resource-type": "branch"}, "corporaForUser")
     corpora.sort()
-
-    groupsXml = rh.get("/group/"+username, {"uid": username, "action": "showinfo"})
-    parser = xml_parser.XmlParser(groupsXml.split("\n"))
-    groups = parser.groupsForUser()
+    groups = get_from_api_and_parse("/group/"+username, {"uid": username, "action": "showinfo"}, "groupsForUser")
     groups.sort()
 
     groupsAndOwners = []
@@ -89,91 +98,64 @@ def index():
 
     return render_template("frontpage.html", corpora=corpora, groups=groupsAndOwners)
 
+def initialize_field_dict():
+    field_dict = {
+        "group": ["gid", "public"],
+        "domain": ["domain", ""],
+        "origin": ["origin", ""],
+        "description": ["description", ""],
+        "pdf_reader": ["ImportPara_mode", "tika"],
+        "document_alignment": ["AlignPara_search_parallel", "identical-names"],
+        "sentence_alignment": ["AlignPara_method", "bisent"],
+        "sentence_splitter": ["ImportPara_splitter", "udpipe"],
+        "autoalignment": ["ImportPara_autoalign", "on"],
+        "autoparsing": ["ImportPara_autoparse", "on"],
+        "autowordalign": ["ImportPara_autowordalign", "on"]
+    }
+
+    return field_dict
+
 @app.route('/create_corpus', methods=["GET", "POST"])
 @login_required
 def create_corpus():
     if session:
         username = session['username']
 
-    groupsXml = rh.get("/group/"+username, {"uid": username, "action": "showinfo"})
-    parser = xml_parser.XmlParser(groupsXml.split("\n"))
-    groups = parser.groupsForUser()
+    groups = get_from_api_and_parse("/group/"+username, {"uid": username, "action": "showinfo"}, "groupsForUser")
     groups.sort()
 
-    field_dict = {
-        "group": "gid",
-        "domain": "domain",
-        "origin": "origin",
-        "description": "description",
-        "pdf_reader": "ImportPara_mode",
-        "document_alignment": "AlignPara_search_parallel",
-        "sentence_alignment": "AlignPara_method",
-        "sentence_splitter": "ImportPara_splitter"
-    }
-    setting_fields = {
-        "group": "public",
-        "domain": "",
-        "origin": "",
-        "description": "",
-        "pdf_reader": "tika",
-        "document_alignment": "identical-names",
-        "sentence_alignment": "bisent",
-        "sentence_splitter" : "udpipe"
-    }
-    
-    setting_fields["autoalignment"] = True
-    setting_fields["autoparsing"] = True
-    setting_fields["autowordalign"] = True
-
-    autodict = {"autoalignment": "ImportPara_autoalign",
-    "autoparsing": "ImportPara_autoparse",
-    "autowordalign": "ImportPara_autowordalign"}
+    field_dict = initialize_field_dict()
 
     if request.method == "POST":
-        print(request.form)
         corpusName = request.form["name"]
+
+        for key in field_dict.keys():
+            if key in ["autoalignment", "autoparsing", "autowordalign"]:
+                field_dict[key][1] = "on"
+                if key not in request.form.keys():
+                    field_dict[key][1] = "off"
+            else:
+                field_dict[key][1] = request.form[key]
+
         if corpusName == "" or " " in corpusName or not all(ord(char) < 128 for char in corpusName):
-
-            setting_fields = {
-                "group": request.form["group"],
-                "domain": request.form["domain"],
-                "description": request.form["description"],
-                "pdf_reader": request.form["pdf_reader"],
-                "document_alignment": request.form["document_alignment"],
-                "sentence_alignment": request.form["sentence_alignment"],
-                "sentence_splitter": request.form["sentence_splitter"],
-                "origin": request.form["origin"]
-            }
-
-            for key in autodict.keys():
-                setting_fields[key] =  False
-                if key in request.form.keys() and request.form[key] == "on":
-                    setting_fields[key] = True
-
+            
             flash("Name must be ASCII only and must not contain spaces")
-            return render_template("create_corpus.html", groups=groups, name=request.form['name'], settings=setting_fields, ftype="create", pdf_reader_options = pdf_reader_options, document_alignment_options = document_alignment_options, sentence_alignment_options = sentence_alignment_options, sentence_splitter_options = sentence_splitter_options)
+
+            return render_template("create_corpus.html", groups=groups, name=request.form['name'], settings=field_dict, ftype="create", corpus_creation_options=corpus_creation_options)
 
         parameters = {"uid": username}
 
         response = rh.put("/storage/"+corpusName+"/"+username, parameters)
 
-        parameters = {"uid": username}
-        for key in request.form.keys():
-            if key in field_dict.keys():
-                parameters[field_dict[key]] = request.form[key]
-
-        for key in autodict.keys():
-            if key not in request.form.keys():
-                parameters[autodict[key]] = "off"
-            else:
-                parameters[autodict[key]] = "on"
-
+        for key in field_dict.keys():
+            parameters[field_dict[key][0]] = field_dict[key][1]
+        
         response = rh.put("/metadata/"+corpusName+"/"+username, parameters)
             
         flash('Corpus "' + corpusName + '" created!')
         return redirect(url_for('show_corpus', corpusname=corpusName))
 
-    return render_template("create_corpus.html", groups=groups, ftype="create", settings=setting_fields, pdf_reader_options = pdf_reader_options, document_alignment_options = document_alignment_options, sentence_alignment_options = sentence_alignment_options, sentence_splitter_options = sentence_splitter_options)
+    return render_template("create_corpus.html", groups=groups, ftype="create", settings=field_dict, corpus_creation_options=corpus_creation_options)
 
 @app.route('/corpus_settings/<corpusname>', methods=["GET", "POST"])
 @login_required
@@ -181,79 +163,34 @@ def corpus_settings(corpusname):
     if session:
         username = session['username']
 
-    groupsXml = rh.get("/group/"+username, {"uid": username, "action": "showinfo"})
-    parser = xml_parser.XmlParser(groupsXml.split("\n"))
-    groups = parser.groupsForUser()
+    groups = get_from_api_and_parse("/group/"+username, {"uid": username, "action": "showinfo"}, "groupsForUser")
     groups.sort()
 
-    metadataXml = rh.get("/metadata/"+corpusname+"/"+username, {"uid": username})
-    parser = xml_parser.XmlParser(metadataXml.split("\n"))
-    metadata = parser.getMetadata()
+    metadata = get_from_api_and_parse("/metadata/"+corpusname+"/"+username, {"uid": username}, "getMetadata")
 
-    field_dict = {
-        "group": "gid",
-        "domain": "domain",
-        "origin": "origin",
-        "description": "description",
-        "pdf_reader": "ImportPara_mode",
-        "document_alignment": "AlignPara_search_parallel",
-        "sentence_alignment": "AlignPara_method",
-        "sentence_splitter": "ImportPara_splitter"
-    }
-
-    setting_fields = {
-        "group": "public",
-        "domain": "",
-        "origin": "",
-        "description": "",
-        "pdf_reader": "tika",
-        "document_alignment": "identical-names",
-        "sentence_alignment": "bisent",
-        "sentence_splitter" : "udpipe"
-    } 
+    field_dict = initialize_field_dict() 
 
     for key in field_dict.keys():
-        if field_dict[key] in metadata.keys():
-            setting_fields[key] = metadata[field_dict[key]]
+        if field_dict[key][0] in metadata.keys():
+            field_dict[key][1] = metadata[field_dict[key][0]]
+        else:
+            field_dict[key][1] = "off"
 
-    setting_fields["autoalignment"] = False
-    setting_fields["autoparsing"] = False
-    setting_fields["autowordalign"] = False
-
-    autodict = {"autoalignment": "ImportPara_autoalign",
-    "autoparsing": "ImportPara_autoparse",
-    "autowordalign": "ImportPara_autowordalign"}
-    
-    for key in autodict.keys():
-        if autodict[key] not in metadata.keys() or (autodict[key] in metadata.keys() and metadata[autodict[key]] == "on"):
-            setting_fields[key] = True
-    
-    print(setting_fields)
     if request.method == "POST":
-        print(request.form)
         parameters = {"uid": username}
-        if request.form["group"] != "public":
-            parameters["gid"] = request.form["group"]
-
-        parameters["ImportPara_autoalign"] = "on"
-        parameters["ImportPara_autoparse"] = "on"
-        parameters["ImportPara_autowordalign"] = "on"
-
-        for key in autodict.keys():
-            if key not in request.form.keys():
-                parameters[autodict[key]] = "off"
-            
+        
         for key in field_dict.keys():
             if key in request.form.keys():
-                parameters[field_dict[key]] = request.form[key]
+                parameters[field_dict[key][0]] = request.form[key]
+            else:
+                parameters[field_dict[key][0]] = "off"
 
-        print(parameters)
         response = rh.post("/metadata/"+corpusname+"/"+username, parameters)
             
         flash('Corpus settings saved!')
         return redirect(url_for('show_corpus', corpusname=corpusname))
  
-    return render_template("create_corpus.html", groups=groups, name=corpusname, settings=setting_fields, ftype="settings", pdf_reader_options = pdf_reader_options, document_alignment_options = document_alignment_options, sentence_alignment_options = sentence_alignment_options, sentence_splitter_options = sentence_splitter_options)
+    return render_template("create_corpus.html", groups=groups, name=corpusname, settings=field_dict, ftype="settings", corpus_creation_options=corpus_creation_options)
 
 @app.route('/remove_corpus')
 @login_required
@@ -278,9 +215,7 @@ def remove_group():
     return jsonify(response=response)
 
 def get_group_members(group, username):
-    usersXml = rh.get("/group/"+group, {"uid": username, "action": "showinfo"})
-    parser = xml_parser.XmlParser(usersXml.split("\n"))
-    users = parser.getUsers()
+    users = get_from_api_and_parse("/group/"+group, {"uid": username, "action": "showinfo"}, "getUsers")
     for user in ["admin", username]:
         if user in users:
             users.remove(user)
@@ -345,9 +280,7 @@ def show_corpus(corpusname):
     if session:
         username = session['username']
 
-    branchesXml = rh.get("/storage/"+corpusname, {"uid": username})
-    parser = xml_parser.XmlParser(branchesXml.split("\n"))
-    branches = parser.branchesForCorpus()
+    branches = get_from_api_and_parse("/storage/"+corpusname, {"uid": username}, "branchesForCorpus")
     branches.sort()
     
     clone = False
@@ -402,9 +335,7 @@ def clone_branch():
     
     ret = rh.post("/storage/"+path, {"uid": username, "action": "copy", "dest": username})
 
-    branchesXml = rh.get("/storage/"+corpusname, {"uid": username})
-    parser = xml_parser.XmlParser(branchesXml.split("\n"))
-    branches = parser.branchesForCorpus()
+    branches = get_from_api_and_parse("/storage/"+corpusname, {"uid": username}, "branchesForCorpus")
     branches.sort()
         
     clone = False
@@ -423,10 +354,7 @@ def search():
 
     corpusname = request.args.get("corpusname", "", type=str)
 
-    corporaXml = rh.get("/metadata", {"uid": username, "resource-type": "branch", "INCLUDES_slot": corpusname})
-    
-    parser = xml_parser.XmlParser(corporaXml.split("\n"))
-    unsorted = parser.corporaForUser()
+    unsorted = get_from_api_and_parse("/metadata", {"uid": username, "resource-type": "branch", "INCLUDES_slot": corpusname}, "corporaForUser")
 
     starts = []
     contains = []
@@ -454,11 +382,9 @@ def update_metadata():
     
     for key in metadata.keys():
         metadata[key] = cgi.escape(metadata[key])
-        print(metadata[key])
 
     metadata["uid"] = username
     response = rh.post("/metadata"+path, metadata)
-    print(response)
 
     return jsonify(response=response)
         
@@ -471,48 +397,6 @@ def edit_alignment():
     response = rh.put("/job"+path, {"uid": username, "run": "setup_isa"})
 
     return jsonify(response=response, username=username)
-           
-@app.route('/letsmtui', methods=['GET', 'POST'])
-@login_required
-def letsmtui():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            timename = str(time.time())+"###TIME###"+filename
-            directory = request.form['directory']
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], timename))
-            if session:
-                username = session['username']
-            command = letsmt_connect.split() + ["-X", "PUT", letsmt_url + directory + "?uid=" + username, "--form", "payload=@/var/www/uploads/"+timename]
-            ret = sp.Popen(command , stdout=sp.PIPE).stdout.read().decode("utf-8")
-            os.remove("/var/www/uploads/" + timename)
-            flash("Uploaded file " + filename + " to " + directory)
-            return redirect(url_for('letsmtui', directory=directory))
-    return render_template("letsmt.html")
-
-@app.route('/letsmt')
-@login_required
-def letsmt():
-    ret = ""
-
-    method = request.args.get("method", "GET", type=str)
-    command = request.args.get("command", "/storage", type=str)
-    action = request.args.get("action", "", type=str)
-    payload = request.args.get("payload", "", type=str)
-    if payload != "":
-        payload = " --form payload=@/var/www/uploads/" + payload
-    username = ""
-    if session:
-        username = session['username']
-    ret = sp.Popen(letsmt_connect.split() + ["-X", method, letsmt_url+command+"?uid=" + username + action + payload], stdout=sp.PIPE).stdout.read().decode("utf-8")
-    return jsonify(result=ret)
 
 @app.route('/get_branch')
 @login_required
@@ -527,13 +411,9 @@ def get_branch():
     if session:
         username = session['username']
 
-    uploadsContents = rh.get("/storage/"+corpusname+"/"+branch+"/uploads", {"uid": username})
-    parser = xml_parser.XmlParser(uploadsContents.split("\n"))
-    uploads = parser.navigateDirectory()
-
-    xmlContents = rh.get("/metadata/"+corpusname+"/"+branch, {"uid": username})
-    parser = xml_parser.XmlParser(xmlContents.split("\n"))
-    monolingual, parallel = parser.getMonolingualAndParallel()
+    uploads = get_from_api_and_parse("/storage/"+corpusname+"/"+branch+"/uploads", {"uid": username}, "navigateDirectory")
+    
+    monolingual, parallel = get_from_api_and_parse("/metadata/"+corpusname+"/"+branch, {"uid": username}, "getMonolingualAndParallel")
     monolingual.sort()
     parallel.sort()
     
@@ -557,9 +437,7 @@ def get_subdirs():
     subdir = subdir.replace("align-target-files", "xml")
     subdir = subdir.replace("parallel", "xml")
 
-    subdirContents = rh.get("/storage/"+corpusname+"/"+branch+subdir, {"uid": username})
-    parser = xml_parser.XmlParser(subdirContents.split("\n"))
-    subdirs = parser.navigateDirectory()
+    subdirs = get_from_api_and_parse("/storage/"+corpusname+"/"+branch+subdir, {"uid": username}, "navigateDirectory")
     subdirs.sort()
     
     return jsonify(subdirs=subdirs)
@@ -631,9 +509,7 @@ def get_metadata():
 
     path = request.args.get("path", "", type=str)
 
-    metadataXml = rh.get("/metadata"+path, {"uid": username})
-    parser = xml_parser.XmlParser(metadataXml.split("\n"))
-    metadata = parser.getMetadata()
+    metadata = get_from_api_and_parse("/metadata"+path, {"uid": username}, "getMetadata")
     metadataKeys = list(metadata.keys()).copy()
     metadataKeys.sort()
 
@@ -681,9 +557,7 @@ def list_alignment_candidates():
     corpus = request.args.get("corpus", "", type=str)
     branch = request.args.get("branch", "", type=str)
 
-    candidates_xml = rh.get("/metadata/"+corpus+"/"+branch, {"uid": username, "ENDS_WITH_align-candidates": "xml", "type": "recursive", "action": "list_all"})
-    parser = xml_parser.XmlParser(candidates_xml.split("\n"))
-    candidates = parser.getAlignCandidates()
+    candidates = get_from_api_and_parse("/metadata/"+corpus+"/"+branch, {"uid": username, "ENDS_WITH_align-candidates": "xml", "type": "recursive", "action": "list_all"}, "getAlignCandidates")
     file_list = list(candidates.keys())
     file_list.sort()
     return jsonify(candidates = candidates, file_list = file_list)
@@ -715,9 +589,7 @@ def remove_alignment_candidate():
     filename = request.args.get("filename", "", type=str)
     rm_candidate = request.args.get("rm_candidate", "", type=str)
 
-    candidates_xml = rh.get("/metadata/"+filename, {"uid": username})
-    parser = xml_parser.XmlParser(candidates_xml.split("\n"))
-    candidates = parser.getAlignCandidates()
+    candidates = get_from_api_and_parse("/metadata/"+filename, {"uid": username}, "getAlignCandidates")
     temp_candidates = candidates[list(candidates.keys())[0]]
     cur_candidates = ["xml/"+c for c in temp_candidates]
     cur_candidates.remove(rm_candidate)
