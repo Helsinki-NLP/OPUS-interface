@@ -614,4 +614,7 @@ if (branchname != undefined) {
     $("#choose-branch").val(branchname);
 }
 
-update_branch();
+if (window.location.pathname.indexOf("show_corpus") >= 0) {
+    update_branch();
+}
+

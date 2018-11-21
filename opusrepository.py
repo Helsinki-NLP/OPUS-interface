@@ -75,7 +75,9 @@ def get_from_api_and_parse(path, parameters, function):
         "branchesForCorpus": parser.branchesForCorpus,
         "navigateDirectory": parser.navigateDirectory,
         "getMonolingualAndParallel": parser.getMonolingualAndParallel,
-        "getAlignCandidates": parser.getAlignCandidates
+        "getAlignCandidates": parser.getAlignCandidates,
+        "getJobs": parser.getJobs,
+        "getJobPath": parser.getJobPath
     }
     data = parser_functions[function]()
     return data
@@ -91,12 +93,19 @@ def index():
     groups = get_from_api_and_parse("/group/"+username, {"uid": username, "action": "showinfo"}, "groupsForUser")
     groups.sort()
 
+    jobs = []
+    jobids = get_from_api_and_parse("/job", {"uid": username}, "getJobs")
+
+    for jobid in jobids:
+        jobname = get_from_api_and_parse("/metadata", {"uid": username, "job_id": jobid[0]}, "getJobPath")
+        jobs.append((jobname.split("/")[-1], jobid[1]))
+
     groupsAndOwners = []
     for group in groups:
         owner = get_group_owner(group, username)
         groupsAndOwners.append((group, owner))
 
-    return render_template("frontpage.html", corpora=corpora, groups=groupsAndOwners)
+    return render_template("frontpage.html", corpora=corpora, groups=groupsAndOwners, jobs=jobs)
 
 def initialize_field_dict():
     field_dict = {
@@ -288,21 +297,6 @@ def show_corpus(corpusname):
         clone = True
     
     return render_template("show_corpus.html", name=corpusname, branches=branches, clone=clone)
-
-@app.route('/download/<filename>')
-def download(filename):
-    if session:
-        username = session['username']
-
-    ret = rh.get("/storage/mikkoslot/xml/en/html/"+filename, {"uid": username, "action": "download", "archive": "0"})
-    timename = str(time.time())+"###TIME###"+filename
-    global previous_download
-    if previous_download != "":
-        os.remove(download_folder+"/"+previous_download)
-    previous_download = timename
-    with open(download_folder+"/"+timename, "w") as f:
-        f.write(ret)
-    return send_file(download_folder+"/"+timename, attachment_filename=filename)
 
 @app.route('/download_file')
 @login_required

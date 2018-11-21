@@ -52,21 +52,19 @@ class XmlParser:
                     corpora.append(m.group(1))
         return corpora
             
-    def branchesForCorpus(self):
-        branches = []
+    def collectToList(self, tag):
+        result = []
         for line in self.xmlData:
             self.parseLine(line)
-            if self.start == "name" and self.end == "name":
-                branches.append(self.chara)
-        return branches
+            if self.start == tag and self.end == tag:
+                result.append(self.chara)
+        return result
+
+    def branchesForCorpus(self):
+        return self.collectToList("name")
 
     def getUsers(self):
-        users = []
-        for line in self.xmlData:
-            self.parseLine(line)
-            if self.start == "user" and self.end == "user":
-                users.append(self.chara)
-        return users
+        return self.collectToList("user")
 
     def navigateDirectory(self):
         dirs = []
@@ -130,28 +128,39 @@ class XmlParser:
                 value = []
         return candidates
 
-    def getGroupOwner(self):
-        owner = "uknown"
+    def getAttrFromTag(self, tag, attr):
+        result = "unknown"
         for line in self.xmlData:
             self.parseLine(line)
-            if self.start == "entry":
-                owner = self.attrs["owner"]
+            if self.start == tag:
+                result = self.attrs[attr]
                 break
-        return owner
+        return result
 
-"""
-xml_data = '''
-<letsmt-ws version="56">
-  <list path="/group/">
-    <entry id="grouptest" kind="group" owner="mikkotest">
-      <user>mikkotest</user>
-      <user>mikkotest10</user>
-    </entry>
-  </list>
-  <status code="0" location="/group/grouptest" operation="GET" type="ok"></status>
-</letsmt-ws>
+    def getGroupOwner(self):
+        return self.getAttrFromTag("entry", "owner")
+        
+    def getJobPath(self):
+        return self.getAttrFromTag("entry", "path")
+
+    def getJobs(self):
+        info = []
+        for line in self.xmlData:
+            self.parseLine(line)
+            if self.start == "entry" and self.end == "entry":
+                info.append((self.attrs["name"], self.attrs["status"]))
+        return info 
+
 '''
-
-parser = XmlParser(xml_data.split("\n"))
-print(parser.getUsers())
+xml_data = """
+<letsmt-ws version="56">
+    <list path="">
+        <entry path="oikeus8/mikkotest/jobs/import/uploads/html.tar" />
+    </list>
+    <status code="0" location="/metadata" operation="GET" type="ok">Found 1 matching entries</status>
+</letsmt-ws>
 """
+           
+parser = XmlParser(xml_data.split("\n"))
+print(parser.getJobPath())
+'''

@@ -5,6 +5,9 @@
 </ul>
 
 <div>
+  <div style="padding: 20px; float: right">Search corpus: <input id="searchcorpus">
+    <ul id="searchresult"></ul>
+  </div>
   <div style="padding: 20px; float: left">
     <b>My corpora</b>
     <form style="display: inline" action="/create_corpus"><input type="submit" value="+"></form>
@@ -13,21 +16,32 @@
       <li id="corpus-li-{{ corpus }}" style="line-height: 20px"><a href="/show_corpus/{{ corpus }}">{{ corpus }}</a>
       <button class="remove-item-button" corpusname="{{ corpus }}">X</button></li>
       {% endfor %}
+    </ul>
   </div>
   <div style="padding: 20px; float: left">
     <b>My groups</b>
     <form style="display: inline" action="/create_group"><input type="submit" value="+"></form>
     <ul id="groups" style="padding-left: 0px">
       {% for group in groups %}
-      <li id="group-li-{{ group[0] }}" style="line-height: 20px"><a href="/edit_group/{{ group[0] }}">{{ group[0] }}</a>
-	{% if group[1] == session.username and group[0] != session.username %}
-	<button class="remove-item-button" groupname="{{ group[0] }}">X</button>
-	{% endif %}
-      </li>
+        <li id="group-li-{{ group[0] }}" style="line-height: 20px"><a href="/edit_group/{{ group[0] }}">{{ group[0] }}</a>
+        {% if group[1] == session.username and group[0] != session.username %}
+        <button class="remove-item-button" groupname="{{ group[0] }}">X</button>
+        {% endif %}
+        </li>
       {% endfor %}
+    </ul>
   </div>
-  <div style="padding: 20px; float: right">Search corpus: <input id="searchcorpus">
-    <ul id="searchresult"></ul>
+  <div style="padding: 20px; float: left">
+    <b style="line-height: 29px">My jobs</b>
+    <ul id="jobs" style="padding-left: 0px">
+      {% if jobs|length == 0 %}
+      You have no jobs running or in queue.
+      {% else %}
+        {% for job in jobs %}
+          <li>{{ job[0] }}, {{ job[1] }}</li>
+        {% endfor %}
+      {% endif %}
+    </ul>
   </div>
 </div>
 
