@@ -533,7 +533,14 @@ def import_file():
         username = session['username']
 
     path = request.args.get("path", "", type=str)
-    response = rh.put("/job"+path, {"uid": username, "run": "reimport"})
+    command = request.args.get("command", "", type=str)
+
+    if command in ["import", "import again"]:
+        response = rh.put("/job"+path, {"uid": username, "run": "reimport"})
+    elif command in ["stop importing", "cancel import"]:
+        metadata = get_from_api_and_parse("/metadata"+path, {"uid": username}, "getMetadata")
+        job_id = metadata["import_job_id"]
+        response = rh.delete("/job", {"uid": username, "job_id": job_id})
     
     return jsonify(content = response)
 

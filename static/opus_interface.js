@@ -52,6 +52,10 @@ function showMetadata(datapath) {
                 $("#importfile").css("display", "inline");
             } else if (key == "status" && data.metadata[key] == "imported" && inUploads) {
                 $("#importfile").text("import again");
+            } else if (key == "status" && data.metadata[key] == "importing" && inUploads) {
+                $("#importfile").text("stop importing");
+            } else if (key == "status" && data.metadata[key] == "waiting in import queue" && inUploads) {
+                $("#importfile").text("cancel import");
             } else if (!inUploads) {
                 $("#downloadfile").css("display", "inline");
             }
@@ -123,11 +127,20 @@ function showFilecontent(datapath, windowid) {
 
 function importFile(datapath) {
     let path = formulate_datapath(datapath);
+    let command = $("#importfile").text();
     $.getJSON(baseurl+"/import_file", {
-        path: path
+        path: path,
+        command: command
     }, function(data) {
         $("#messages")[0].innerHTML = "";
-        $("#messages").append('<li>Started importing file "' + path + "'</li>");
+        if (["import", "import again"].indexOf(command) >= 0) {
+            $("#messages").append('<li>Started importing file "' + path + "'</li>");
+        } else if (command == "stop importing") {
+            $("#messages").append('<li>Stopped importing file "' + path + "'</li>");
+        } else if (command == "cancel import") {
+            $("#messages").append('<li>Canceled import for file "' + path + "'</li>");
+        }
+        console.log(data.content);
     });
     update_branch();
     showOrHideTrees("monolingual", "parallel", "", "show");
