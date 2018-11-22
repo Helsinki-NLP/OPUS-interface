@@ -607,6 +607,9 @@ $(".remove-item-button").on("click", function() {
     } else if (jobname) {
         handleImport("/"+jobname, "cancel import");
         $("#job-li-"+jobname.replace(/\//g, "-_-").replace(/\./g, "_DOT_")).remove();
+        if ($("#jobs")[0].childElementCount == 0) {
+            $("#jobs").append("You have no jobs running or in queue.");
+        }
     }
 });
 

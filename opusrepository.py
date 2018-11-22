@@ -76,7 +76,8 @@ def get_from_api_and_parse(path, parameters, function):
         "getMonolingualAndParallel": parser.getMonolingualAndParallel,
         "getAlignCandidates": parser.getAlignCandidates,
         "getJobs": parser.getJobs,
-        "getJobPath": parser.getJobPath
+        "getJobPath": parser.getJobPath,
+        "getFileContent": parser.getFileContent
     }
     data = parser_functions[function]()
     return data
@@ -510,8 +511,9 @@ def get_filecontent():
         username = session['username']
 
     path = request.args.get("path", "", type=str)
-    content = rh.get("/storage"+path, {"uid": username, "action": "download", "archive": "0"})
-    
+
+    content = get_from_api_and_parse("/storage"+path, {"uid": username, "action": "cat", "to": "1000"}, "getFileContent")
+
     return jsonify(content = content)
 
 @app.route('/import_file')

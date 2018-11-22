@@ -1,5 +1,6 @@
 import xml.parsers.expat
 import re
+import html
 
 class XmlParser:
 
@@ -150,6 +151,21 @@ class XmlParser:
             if self.start == "entry" and self.end == "entry":
                 info.append((self.attrs["file"], self.attrs["status"]))
         return info 
+
+    def getFileContent(self):
+        content = ""
+        for line in self.xmlData:
+            self.parseLine(line)
+            if self.start == "entry":
+                newcontent = html.unescape(line).strip()
+                if newcontent[:7] == "<entry>":
+                    newcontent = newcontent[7:]
+                if newcontent[-8:] == "</entry>":
+                    newcontent = newcontent[:-8]
+                content += newcontent + "\n"
+            if self.end == "entry":
+                break
+        return content
 
 '''
 xml_data = """
