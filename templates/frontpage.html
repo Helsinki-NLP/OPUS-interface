@@ -38,7 +38,10 @@
       You have no jobs running or in queue.
       {% else %}
         {% for job in jobs %}
-          <li>{{ job[0] }}, {{ job[1] }}</li>
+          <li id="job-li-{{ job[0].replace('/', '-_-').replace('.', '_DOT_') }}">
+            {{ job[0] }}, {{ job[1] }}
+            <button class="remove-item-button" jobname="{{ job[0] }}">X</button>
+          </li>
         {% endfor %}
       {% endif %}
     </ul>

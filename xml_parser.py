@@ -148,7 +148,7 @@ class XmlParser:
         for line in self.xmlData:
             self.parseLine(line)
             if self.start == "entry" and self.end == "entry":
-                info.append((self.attrs["name"], self.attrs["status"]))
+                info.append((self.attrs["file"], self.attrs["status"]))
         return info 
 
 '''

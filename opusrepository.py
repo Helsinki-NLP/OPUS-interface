@@ -8,7 +8,6 @@ from functools import wraps
 import sqlite3
 from sqlalchemy import create_engine
 import pickle
-import subprocess as sp
 import os
 from werkzeug.utils import secure_filename
 import time
@@ -93,12 +92,7 @@ def index():
     groups = get_from_api_and_parse("/group/"+username, {"uid": username, "action": "showinfo"}, "groupsForUser")
     groups.sort()
 
-    jobs = []
-    jobids = get_from_api_and_parse("/job", {"uid": username}, "getJobs")
-
-    for jobid in jobids:
-        jobname = get_from_api_and_parse("/metadata", {"uid": username, "job_id": jobid[0]}, "getJobPath")
-        jobs.append((jobname.split("/")[-1], jobid[1]))
+    jobs = get_from_api_and_parse("/job", {"uid": username}, "getJobs")
 
     groupsAndOwners = []
     for group in groups:
@@ -528,12 +522,11 @@ def import_file():
 
     path = request.args.get("path", "", type=str)
     command = request.args.get("command", "", type=str)
-
     if command in ["import", "import again"]:
         response = rh.put("/job"+path, {"uid": username, "run": "reimport"})
     elif command in ["stop importing", "cancel import"]:
         metadata = get_from_api_and_parse("/metadata"+path, {"uid": username}, "getMetadata")
-        job_id = metadata["import_job_id"]
+        job_id = metadata["job_id"]
         response = rh.delete("/job", {"uid": username, "job_id": job_id})
     
     return jsonify(content = response)
@@ -690,7 +683,6 @@ def register_page():
                 c.execute("INSERT INTO users (username, password, email, tracking) VALUES (%s, %s, %s, %s)",
                          (thwart(username), thwart(password), thwart(email), thwart("translate")))
                 response = rh.post("/group/"+thwart(username), {"uid": thwart(username)})
-                print(response)
                 conn.commit()
                 flash("Thanks for registering!")
                 c.close()

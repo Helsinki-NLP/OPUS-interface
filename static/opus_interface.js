@@ -17,7 +17,9 @@ function update_branch() {
         subdir_to_list(data.parallel, "parallel");
         subdir_to_list(data.monolingual, "align-source-files");
         subdir_to_list(data.monolingual, "align-target-files");
-        list_alignment_candidates();
+        if ($("#align-selection-table").css("display") == "table") {
+            list_alignment_candidates();
+        }
     });
 }
 
@@ -125,9 +127,7 @@ function showFilecontent(datapath, windowid) {
     });
 }
 
-function importFile(datapath) {
-    let path = formulate_datapath(datapath);
-    let command = $("#importfile").text();
+function handleImport(path, command) {
     $.getJSON(baseurl+"/import_file", {
         path: path,
         command: command
@@ -142,6 +142,12 @@ function importFile(datapath) {
         }
         console.log(data.content);
     });
+}
+
+function importFile(datapath) {
+    let path = formulate_datapath(datapath);
+    let command = $("#importfile").text();
+    handleImport(path, command);
     update_branch();
     showOrHideTrees("monolingual", "parallel", "", "show");
 }
@@ -593,10 +599,14 @@ function delete_item(tobedeleted, itemtype){
 $(".remove-item-button").on("click", function() {
     let corpusname = $(this).attr("corpusname");
     let groupname = $(this).attr("groupname");
+    let jobname = $(this).attr("jobname");
     if (corpusname) {
         delete_item(corpusname, "corpus");
     } else if (groupname) {
         delete_item(groupname, "group");
+    } else if (jobname) {
+        handleImport("/"+jobname, "cancel import");
+        $("#job-li-"+jobname.replace(/\//g, "-_-").replace(/\./g, "_DOT_")).remove();
     }
 });
 
