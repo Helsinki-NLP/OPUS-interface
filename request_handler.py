@@ -1,4 +1,5 @@
 import requests
+import html
 
 class RequestHandler:
 
@@ -13,7 +14,7 @@ class RequestHandler:
 
     def get(self, url, params):
         r = self.s.get(self.root_url+url, params=params)
-        return r.text
+        return html.unescape(r.text)
 
     def put(self, url, params):
         r = self.s.put(self.root_url+url, params=params)

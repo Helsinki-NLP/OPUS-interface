@@ -1,4 +1,5 @@
 import xml.parsers.expat
+import xml.etree.ElementTree as ET
 import re
 import html
 
@@ -15,6 +16,10 @@ class XmlParser:
         self.parser.StartElementHandler = self.startElement
         self.parser.CharacterDataHandler = self.charData
         self.parser.EndElementHandler = self.endElement
+
+        self.elementDict = {}
+        self.elementList = []
+        self.elementString = ""
 
     def startElement(self, name, attrs):
         self.start = name
@@ -34,32 +39,43 @@ class XmlParser:
         for line in self.xmlData:
             print(self.parseLine(line))
 
+    def recursiveGroups(self, element):
+        for child in element:
+            if child.tag == "member_of":
+                self.elementList = child.text.split(",")
+            self.recursiveGroups(child)
+
     def groupsForUser(self):
-        groups = []
-        for line in self.xmlData:
-            self.parseLine(line)
-            if self.start == "member_of" and self.end == "member_of":
-                groups = self.chara.split(",")
-                break
-        return groups
+        root = ET.fromstring("\n".join(self.xmlData))
+        self.recursiveGroups(root)
+
+        return self.elementList
+
+    def recursiveCorpora(self, element):
+        for child in element:
+            if element.tag == "list":
+                m = re.search("^(.*)\/", child.attrib["path"])
+                if m.group(1) not in self.elementList:
+                    self.elementList.append(m.group(1))
+            self.recursiveCorpora(child)
 
     def corporaForUser(self):
-        corpora = []
-        for line in self.xmlData:
-            self.parseLine(line)
-            if self.start == "entry" and self.end == "entry":
-                m = re.search("^(.*)\/", self.attrs["path"])
-                if m.group(1) not in corpora:
-                    corpora.append(m.group(1))
-        return corpora
+        root = ET.fromstring("\n".join(self.xmlData))
+        self.recursiveCorpora(root)
+
+        return self.elementList
             
+    def recursiveCollect(self, element, tag):
+        for child in element:
+            if child.tag == tag:
+                self.elementList.append(child.text)
+            self.recursiveCollect(child, tag)
+
     def collectToList(self, tag):
-        result = []
-        for line in self.xmlData:
-            self.parseLine(line)
-            if self.start == tag and self.end == tag:
-                result.append(self.chara)
-        return result
+        root = ET.fromstring("\n".join(self.xmlData))
+        self.recursiveCollect(root, tag)
+
+        return self.elementList
 
     def branchesForCorpus(self):
         return self.collectToList("name")
@@ -95,20 +111,20 @@ class XmlParser:
         parallel = [[x, "dir"] for x in parallel_pre]
         return (monolingual, parallel)
 
+    def recursiveMetadata(self, element):
+        for child in element:
+            if element.tag == "entry":
+                if child.text:
+                    self.elementDict[child.tag] = html.escape(child.text)
+                else:
+                    self.elementDict[child.tag] = ""
+            self.recursiveMetadata(child)
+
     def getMetadata(self):
-        metadata = {}
-        storeValues = False
-        for line in self.xmlData:
-            self.parseLine(line)
-            if self.end == "entry":
-                storeValues = False
-            if storeValues and self.start != "":
-                metadata[self.start] = self.chara
-            if self.start == "entry":
-                storeValues = True
-                if "path" in self.attrs.keys():
-                    metadata["path"] = self.attrs["path"]
-        return metadata
+        root = ET.fromstring("\n".join(self.xmlData))
+        self.recursiveMetadata(root)
+        
+        return self.elementDict
 
     def getAlignCandidates(self):
         candidates = {}
@@ -129,14 +145,17 @@ class XmlParser:
                 value = []
         return candidates
 
+    def recursiveAttrTag(self, element, tag, attr):
+        for child in element:
+            if child.tag == tag:
+                self.elementString = child.attrib[attr]
+            self.recursiveAttrTag(child, tag, attr)
+
     def getAttrFromTag(self, tag, attr):
-        result = "unknown"
-        for line in self.xmlData:
-            self.parseLine(line)
-            if self.start == tag:
-                result = self.attrs[attr]
-                break
-        return result
+        root = ET.fromstring("\n".join(self.xmlData))
+        self.recursiveAttrTag(root, tag, attr)
+
+        return self.elementString
 
     def getGroupOwner(self):
         return self.getAttrFromTag("entry", "owner")
@@ -167,16 +186,3 @@ class XmlParser:
                 break
         return content
 
-'''
-xml_data = """
-<letsmt-ws version="56">
-    <list path="">
-        <entry path="oikeus8/mikkotest/jobs/import/uploads/html.tar" />
-    </list>
-    <status code="0" location="/metadata" operation="GET" type="ok">Found 1 matching entries</status>
-</letsmt-ws>
-"""
-           
-parser = XmlParser(xml_data.split("\n"))
-print(parser.getJobPath())
-'''

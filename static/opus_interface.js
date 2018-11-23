@@ -583,13 +583,13 @@ $("#close-alignment").on("click", function() {
     $("#file-structure-table").css("display", "");
 });
 
-function delete_item(tobedeleted, itemtype){
+function delete_item(tobedeleted, number, itemtype){
     if (confirm('Are you sure you want to delete ' + itemtype +' "' + tobedeleted + '"?')) {
         $.getJSON(baseurl+"/remove_"+itemtype, {
             tobedeleted: tobedeleted
         }, function(data) {
             console.log(data);
-            $("#"+itemtype+"-li-"+tobedeleted).remove();
+            $("#"+itemtype+"-li-"+number).remove();
             $("#messages")[0].innerHTML = "";
             $("#messages").append('<li>Deleted ' + itemtype +' "' + tobedeleted + '"</li>');
         });
@@ -600,13 +600,14 @@ $(".remove-item-button").on("click", function() {
     let corpusname = $(this).attr("corpusname");
     let groupname = $(this).attr("groupname");
     let jobname = $(this).attr("jobname");
+    let number = $(this).attr("number");
     if (corpusname) {
-        delete_item(corpusname, "corpus");
+        delete_item(corpusname, number, "corpus");
     } else if (groupname) {
-        delete_item(groupname, "group");
+        delete_item(groupname, number, "group");
     } else if (jobname) {
         handleImport("/"+jobname, "cancel import");
-        $("#job-li-"+jobname.replace(/\//g, "-_-").replace(/\./g, "_DOT_")).remove();
+        $("#job-li-"+number).remove();
         if ($("#jobs")[0].childElementCount == 0) {
             $("#jobs").append("You have no jobs running or in queue.");
         }

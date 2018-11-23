@@ -16,7 +16,7 @@ import re
 from urllib.parse import urlparse, urljoin
 import request_handler
 import json
-import cgi
+import html
 
 rh = request_handler.RequestHandler()
 
@@ -58,7 +58,7 @@ def login_required(f):
     return wrap
 
 def get_group_owner(group, username):
-    groupXml = rh.get("/group/"+group, {"uid": username})
+    groupXml = rh.get("/group/"+html.escape(group), {"uid": username})
     parser = xml_parser.XmlParser(groupXml.split("\n"))
     owner = parser.getGroupOwner()
     return owner
@@ -131,7 +131,7 @@ def create_corpus():
     field_dict = initialize_field_dict()
 
     if request.method == "POST":
-        corpusName = request.form["name"]
+        corpusName = html.escape(request.form["name"])
 
         for key in field_dict.keys():
             if key in ["autoalignment", "autoparsing", "autowordalign"]:
@@ -145,19 +145,19 @@ def create_corpus():
             
             flash("Name must be ASCII only and must not contain spaces")
 
-            return render_template("create_corpus.html", groups=groups, name=request.form['name'], settings=field_dict, ftype="create", corpus_creation_options=corpus_creation_options)
+            return render_template("create_corpus.html", groups=groups, name=corpusName, settings=field_dict, ftype="create", corpus_creation_options=corpus_creation_options)
 
         parameters = {"uid": username}
 
         response = rh.put("/storage/"+corpusName+"/"+username, parameters)
 
         for key in field_dict.keys():
-            parameters[field_dict[key][0]] = field_dict[key][1]
+            parameters[field_dict[key][0]] = html.escape(field_dict[key][1])
         
         response = rh.put("/metadata/"+corpusName+"/"+username, parameters)
             
-        flash('Corpus "' + corpusName + '" created!')
-        return redirect(url_for('show_corpus', corpusname=corpusName))
+        flash('Corpus "' + html.unescape(corpusName) + '" created!')
+        return redirect(url_for('show_corpus', corpusname=html.unescape(corpusName)))
 
     return render_template("create_corpus.html", groups=groups, ftype="create", settings=field_dict, corpus_creation_options=corpus_creation_options)
 
@@ -170,13 +170,13 @@ def corpus_settings(corpusname):
     groups = get_from_api_and_parse("/group/"+username, {"uid": username, "action": "showinfo"}, "groupsForUser")
     groups.sort()
 
-    metadata = get_from_api_and_parse("/metadata/"+corpusname+"/"+username, {"uid": username}, "getMetadata")
+    metadata = get_from_api_and_parse("/metadata/"+html.escape(corpusname)+"/"+username, {"uid": username}, "getMetadata")
 
     field_dict = initialize_field_dict() 
 
     for key in field_dict.keys():
         if field_dict[key][0] in metadata.keys():
-            field_dict[key][1] = metadata[field_dict[key][0]]
+            field_dict[key][1] = html.unescape(metadata[field_dict[key][0]])
         else:
             field_dict[key][1] = "off"
 
@@ -185,11 +185,11 @@ def corpus_settings(corpusname):
         
         for key in field_dict.keys():
             if key in request.form.keys():
-                parameters[field_dict[key][0]] = request.form[key]
+                parameters[field_dict[key][0]] = html.escape(request.form[key])
             else:
                 parameters[field_dict[key][0]] = "off"
 
-        response = rh.post("/metadata/"+corpusname+"/"+username, parameters)
+        response = rh.post("/metadata/"+html.escape(corpusname)+"/"+username, parameters)
             
         flash('Corpus settings saved!')
         return redirect(url_for('show_corpus', corpusname=corpusname))
@@ -203,7 +203,7 @@ def remove_corpus():
         username = session['username']
 
     corpusname = request.args.get("tobedeleted", "", type=str)
-    response = rh.delete("/storage/"+corpusname+"/"+username, {"uid": username})
+    response = rh.delete("/storage/"+html.escape(corpusname)+"/"+username, {"uid": username})
 
     return jsonify(response=response)
 
@@ -214,12 +214,12 @@ def remove_group():
         username = session['username']
 
     groupname = request.args.get("tobedeleted", "", type=str)
-    response = rh.delete("/group/"+groupname, {"uid": username})
+    response = rh.delete("/group/"+html.escape(groupname), {"uid": username})
 
     return jsonify(response=response)
 
 def get_group_members(group, username):
-    users = get_from_api_and_parse("/group/"+group, {"uid": username, "action": "showinfo"}, "getUsers")
+    users = get_from_api_and_parse("/group/"+html.escape(group), {"uid": username, "action": "showinfo"}, "getUsers")
     for user in ["admin", username]:
         if user in users:
             users.remove(user)
@@ -235,7 +235,7 @@ def create_group():
     users = get_group_members("public", username)
 
     if request.method == "POST":
-        groupName = request.form["name"]
+        groupName = html.escape(request.form["name"])
         members = request.form["members"].split(",")[:-1]
                     
         if groupName == "" or " " in groupName or not all(ord(char) < 128 for char in groupName):
@@ -247,7 +247,7 @@ def create_group():
         for member in members:
             response = rh.put("/group/"+groupName+"/"+member, {"uid": username})
 
-        flash('Group "' + groupName + '" created!')
+        flash('Group "' + html.unescape(groupName) + '" created!')
         return redirect(url_for('index'))
 
     return render_template("create_group.html", users=users, owner=True)
@@ -284,7 +284,7 @@ def show_corpus(corpusname):
     if session:
         username = session['username']
 
-    branches = get_from_api_and_parse("/storage/"+corpusname, {"uid": username}, "branchesForCorpus")
+    branches = get_from_api_and_parse("/storage/"+html.escape(corpusname), {"uid": username}, "branchesForCorpus")
     branches.sort()
     
     clone = False
@@ -341,7 +341,7 @@ def search():
     if session:
         username = session['username']
 
-    corpusname = request.args.get("corpusname", "", type=str)
+    corpusname = html.escape(request.args.get("corpusname", "", type=str))
 
     unsorted = get_from_api_and_parse("/metadata", {"uid": username, "resource-type": "branch", "INCLUDES_slot": corpusname}, "corporaForUser")
 
@@ -349,9 +349,9 @@ def search():
     contains = []
     for corpus in unsorted:
         if corpus.startswith(corpusname):
-            starts.append(corpus)
+            starts.append(html.unescape(corpus))
         else:
-            contains.append(corpus)
+            contains.append(html.unescape(corpus))
             
     starts.sort()
     contains.sort()
@@ -370,8 +370,7 @@ def update_metadata():
     metadata = json.loads(metadata)
     
     for key in metadata.keys():
-        metadata[key] = cgi.escape(metadata[key])
-
+        metadata[key] = html.escape(metadata[key])
     metadata["uid"] = username
     response = rh.post("/metadata"+path, metadata)
 
@@ -478,7 +477,7 @@ def upload_file():
             if "autoimport" in request.form.keys():
                 response = rh.put("/job"+path, {"uid": username, "run": "import"})
 
-            response = rh.put("/metadata"+path, {"uid": username, "description": description, "direction": direction})
+            response = rh.put("/metadata"+path, {"uid": username, "description": html.escape(description), "direction": direction})
 
             os.remove(UPLOAD_FOLDER + "/" + timename)
             flash('Uploaded file "' + filename + '" to "' + path + '"')
