@@ -6,23 +6,19 @@
 
 <div>
   <div style="margin: 20px; float: left">
-    <b>My corpora</b>
-    <form style="display: inline" action="/create_corpus"><input type="submit" value="+"></form>
-    <br>
-    <div style="margin: 20px">
-      <b id="corpusname">{{ name }}</b>
-      <select id="choose-branch" style="margin-left: 20px">
-	{% for branch in branches %}
-	<option value="{{ branch }}">{{ branch }}</option>
-	{% endfor %}
-      </select>
-      {% if clone %}
-      <button id="clonebranch" style="margin-left: 20px">clone</button>
-      {% else %}
-      <button id="settings" style="margin-left: 20px">settings</button>
-      {% endif %}
-      <button id="refresh" style="margin-left: 20px">refresh</button>
-    </div>
+    <b id="corpusname">{{ name }}</b>
+    <select id="choose-branch" style="margin-left: 20px">
+      {% for branch in branches %}
+      <option value="{{ branch }}">{{ branch }}</option>
+      {% endfor %}
+    </select>
+    {% if clone %}
+    <button class="tooltip" id="clonebranch" style="margin-left: 20px">clone
+      <span class="tooltiptext">Copy this corpus to your branch</span></button>
+    {% else %}
+    <button id="settings" style="margin-left: 20px">settings</button>
+    {% endif %}
+    <button id="refresh" style="margin-left: 20px">refresh</button>
   </div>
   <div style="padding: 20px; float: right">Search corpus: <input id="searchcorpus">
     <ul id="searchresult"></ul>
@@ -39,53 +35,57 @@
   <tr>
     <td id="uploads-header-cell" class="uploads-cell header-cell">
       <span class="header-next-to-button">uploads</span>
-      <form class="header-button" action="/upload_file">
-	<input type="text" name="corpus" value="{{ name }}" style="display: none">
-	<input id="branch" type="text" name="branch" value="{{ branch }}" style="display: none">
-	<input type="submit" value="+">
+      <form class="header-button tooltip" action="/upload_file">
+        <input type="text" name="corpus" value="{{ name }}" style="display: none">
+        <input id="branch" type="text" name="branch" value="{{ branch }}" style="display: none">
+        <input type="submit" value="+">
+        <span class="tooltiptext">Upload a file</span>
       </form>
     </td>
     <td id="monolingual-header-cell" class="monolingual-cell header-cell">monolingual</td>
     <td id="parallel-header-cell" class="parallel-cell header-cell">
       <span class="header-next-to-button">parallel</span>
-      <button class="header-button" id="align-button">+</button>
+      <span class="header-button tooltip" style="display: inline-block">
+        <button id="align-button">+</button>
+        <span class="tooltiptext" style="right: 100%">Align files manually</span>
+      </span>
     </td>
     <td id="filedisplay-header-cell" class="filedisplay-cell header-cell" style="display: none">
       <button id="editmetadata" edit="false">edit metadata</button>
       <span id="filename"></span>
       <div style="display: inline; float: right; position: relative; right: 10px">
-	<button id="viewfile" showing="metadata">view</button>
-	<button id="editalignment" style="display: none">edit</button>
-	<button id="importfile" style="display: none">import</button>
-	<button id="downloadfile" style="display: none">download</button>
-	<button id="deletefile" style="color: red">delete</button>
-	<button id="filedisplay-close">close</button>
+      <button id="viewfile" showing="metadata">view</button>
+      <button id="editalignment" style="display: none">edit</button>
+      <button id="importfile" style="display: none">import</button>
+      <button id="downloadfile" style="display: none">download</button>
+      <button id="deletefile" style="color: red">delete</button>
+      <button id="filedisplay-close">close</button>
       </div>
     </td>
   </tr>
   <tr>
     <td id="uploads-tree-cell" class="uploads-cell content-cell">
       <div class="scrollable">
-	<ul id="uploads" class="tree-list">
-	</ul>
+  <ul id="uploads" class="tree-list">
+  </ul>
       </div>
     </td>
     <td id="monolingual-tree-cell" class="monolingual-cell content-cell">
       <div class="scrollable">
-	<ul id="monolingual" class="tree-list">
-	</ul>
+  <ul id="monolingual" class="tree-list">
+  </ul>
       </div>
     </td>
     <td id="parallel-tree-cell" class="parallel-cell content-cell">
       <div class="scrollable">
-	<ul id="parallel" class="tree-list">
-	</ul>
+  <ul id="parallel" class="tree-list">
+  </ul>
       </div>
     </td>
     <td id="filedisplay-content-cell" class="filedisplay-cell content-cell" style="display: none">
       <div class="scrollable">
-	<table id="file-metadata" style="padding: 20px"></table>
-	<div style="padding: 20px"><span id="file-content" style="white-space: pre-wrap;"></span></div>
+  <table id="file-metadata" style="padding: 20px"></table>
+  <div style="padding: 20px"><span id="file-content" style="white-space: pre-wrap;"></span></div>
       </div>
     </td>
   </tr>
@@ -101,49 +101,54 @@
   <tr><td class="header-cell" colspan="2">
       <span class="header-next-to-button">alignment candidates</span>
       <button id="close-alignment" class="header-button">close</button>
-      <button id="find-align-candidates" class="header-button">find</button>
+      <span class="header-button tooltip">
+        <button id="find-align-candidates">find</button>
+        <span class="tooltiptext" style="right: 100%">Find alignment candidates automatically</span>
+      </span>
   </td></tr>
   <tr>
     <td class="align-files-cell" colspan="2">
       <div class="scrollable">
-	<table id="align-all-selected" style="width: 100%">
-	  <tr>
-	    <td style="width: 85%; border: none"></td>
-	    <td style="width: 15%; border: none">
-	      <input id="select-all-checkboxes" type="checkbox"><button id="align-all-selected-button">align selected</button>
-	    </td>
-	  </tr>
-	</table>
-	<table id="selected-align-files" style="width: 100%"></table>
-	<!--
-	<span id="align-all-selected" style="float: right; display: none"><input id="select-all-checkboxes" type="checkbox"><button id="align-all-selected-button">align all selected</button></span>
-	-->
+      <table id="align-all-selected" style="width: 100%">
+        <tr>
+          <td style="width: 85%; border: none"></td>
+          <td style="width: 15%; border: none">
+            <input id="select-all-checkboxes" type="checkbox"><button id="align-all-selected-button">align selected</button>
+          </td>
+        </tr>
+      </table>
+      <table id="selected-align-files" style="width: 100%">
+        <span id="alignment-instruction" style="display: none">Select alignment candidates from the files below.</span>
+      </table>
+      <!--
+      <span id="align-all-selected" style="float: right; display: none"><input id="select-all-checkboxes" type="checkbox"><button id="align-all-selected-button">align all selected</button></span>
+      -->
       </div>
     </td>
   </tr>
   <tr>
     <td class="align-files-cell">
       <div class="scrollable">
-	<div id="align-source-file-structure">
-	  <span style="padding-left: 20px">source files</span>
-	  <ul id="align-source-files" class="tree-list"></ul>
-	</div>
-	<div id="align-source-file-content-view" style="display: none">
-	  <button id="close-align-source-file-content" style="float: right">close</button>
-	  <div id="align-source-file-content" style="white-space: pre-wrap; clear: both"></div>
-	</div>
+  <div id="align-source-file-structure">
+    <span style="padding-left: 20px">source files</span>
+    <ul id="align-source-files" class="tree-list"></ul>
+  </div>
+  <div id="align-source-file-content-view" style="display: none">
+    <button id="close-align-source-file-content" style="float: right">close</button>
+    <div id="align-source-file-content" style="white-space: pre-wrap; clear: both"></div>
+  </div>
       </div>
     </td>
     <td class="align-files-cell">
       <div class="scrollable">
-	<div id="align-target-file-structure">
-	  <span style="padding-left: 20px">target files</span>
-	  <ul id="align-target-files" class="tree-list"></ul>
-	</div>
-	<div id="align-target-file-content-view" style="display: none">
-	  <button id="close-align-target-file-content" style="float: right">close</button>
-	  <div id="align-target-file-content" style="white-space: pre-wrap; clear: both"></div>
-	</div>
+  <div id="align-target-file-structure">
+    <span style="padding-left: 20px">target files</span>
+    <ul id="align-target-files" class="tree-list"></ul>
+  </div>
+  <div id="align-target-file-content-view" style="display: none">
+    <button id="close-align-target-file-content" style="float: right">close</button>
+    <div id="align-target-file-content" style="white-space: pre-wrap; clear: both"></div>
+  </div>
       </div>
     </td>
   </tr>

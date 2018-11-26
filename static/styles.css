@@ -115,3 +115,32 @@ table.borders td {
     float: right;
     margin-left: 10px;
 }
+
+.tooltip {
+    position: relative;
+}
+
+.tooltiptext {
+    visibility: hidden;
+    background-color: black;
+    color: white;
+    font-size: 15px;
+    padding: 2px;
+    border-radius: 3px;
+    white-space: nowrap;
+
+    position: absolute;
+    top: 100%;
+    z-index: 1;
+}
+
+.tooltip .tooltiptext {
+    opacity: 0;
+    transition: opacity 1s;
+    transition-delay: 1s;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}

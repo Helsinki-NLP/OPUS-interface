@@ -10,22 +10,33 @@
   </div>
   <div style="padding: 20px; float: left">
     <b>My corpora</b>
-    <form style="display: inline" action="/create_corpus"><input type="submit" value="+"></form>
+    <form class="tooltip" style="display: inline" action="/create_corpus">
+      <input type="submit" value="+">
+      <span class="tooltiptext">Create a new corpus</span>
+    </form>
     <ul id="corpora" style="padding-left: 0px">
       {% for corpus in corpora %}
       <li id="corpus-li-{{ corpora.index(corpus) }}" style="line-height: 20px"><a href="/show_corpus/{{ corpus }}">{{ corpus }}</a>
-      <button class="remove-item-button" corpusname="{{ corpus }}" number="{{ corpora.index(corpus) }}">X</button></li>
+        <button class="remove-item-button tooltip" corpusname="{{ corpus }}" number="{{ corpora.index(corpus) }}">X
+        <span class="tooltiptext" style="left: 15px">Delete corpus</span>
+        </button>
+      </li>
       {% endfor %}
     </ul>
   </div>
   <div style="padding: 20px; float: left">
     <b>My groups</b>
-    <form style="display: inline" action="/create_group"><input type="submit" value="+"></form>
+    <form class="tooltip" style="display: inline" action="/create_group">
+      <input type="submit" value="+">
+      <span class="tooltiptext">Create a new group</span>
+    </form>
     <ul id="groups" style="padding-left: 0px">
       {% for group in groups %}
         <li id="group-li-{{ groups.index(group) }}" style="line-height: 20px"><a href="/edit_group/{{ group[0] }}">{{ group[0] }}</a>
         {% if group[1] == session.username and group[0] != session.username %}
-        <button class="remove-item-button" groupname="{{ group[0] }}" number="{{ groups.index(group) }}">X</button>
+        <button class="remove-item-button tooltip" groupname="{{ group[0] }}" number="{{ groups.index(group) }}">X
+        <span class="tooltiptext" style="left: 15px">Delete group</span>
+        </button>
         {% endif %}
         </li>
       {% endfor %}
@@ -40,7 +51,9 @@
         {% for job in jobs %}
           <li id="job-li-{{ jobs.index(job) }}">
             {{ job[0] }}, {{ job[1] }}
-            <button class="remove-item-button" jobname="{{ job[0] }}" number="{{ jobs.index(job) }}">X</button>
+            <button class="remove-item-button tooltip" jobname="{{ job[0] }}" number="{{ jobs.index(job) }}">X
+            <span class="tooltiptext" style="left: 15px">Cancel job</span>
+            </button>
           </li>
         {% endfor %}
       {% endif %}
