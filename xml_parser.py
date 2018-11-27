@@ -186,3 +186,9 @@ class XmlParser:
                 break
         return content
 
+    def itemExists(self):
+        for line in self.xmlData:
+            self.parseLine(line)
+            if self.start == "entry":
+                return True
+        return False

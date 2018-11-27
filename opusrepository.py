@@ -77,7 +77,8 @@ def get_from_api_and_parse(path, parameters, function):
         "getAlignCandidates": parser.getAlignCandidates,
         "getJobs": parser.getJobs,
         "getJobPath": parser.getJobPath,
-        "getFileContent": parser.getFileContent
+        "getFileContent": parser.getFileContent,
+        "itemExists": parser.itemExists
     }
     data = parser_functions[function]()
     return data
@@ -148,6 +149,10 @@ def create_corpus():
             return render_template("create_corpus.html", groups=groups, name=corpusName, settings=field_dict, ftype="create", corpus_creation_options=corpus_creation_options)
 
         parameters = {"uid": username}
+
+        if get_from_api_and_parse("/storage/"+corpusName, parameters, "itemExists"):
+            flash('Corpus "' + corpusName + '" already exists!')
+            return render_template("create_corpus.html", groups=groups, name=corpusName, settings=field_dict, ftype="create", corpus_creation_options=corpus_creation_options)
 
         response = rh.put("/storage/"+corpusName+"/"+username, parameters)
 
@@ -240,6 +245,10 @@ def create_group():
                     
         if groupName == "" or " " in groupName or not all(ord(char) < 128 for char in groupName):
             flash("Name must be ASCII only and must not contain spaces")
+            return render_template("create_group.html", name=request.form['name'], members=members, users=users, owner=True)
+
+        if get_from_api_and_parse("/group/"+groupName, {"uid": username}, "itemExists"):
+            flash('Group "' + groupName + '" already exists!')
             return render_template("create_group.html", name=request.form['name'], members=members, users=users, owner=True)
 
         response = rh.post("/group/"+groupName, {"uid": username})
@@ -469,7 +478,11 @@ def upload_file():
             filename = secure_filename(file.filename)
             timename = str(time.time())+"###TIME###"+filename
             path = "/".join(request.form['path'].split("/")[:-1])+"/"+filename
-            print(rh.get("/storage"+path, {"uid": username}))
+
+            if get_from_api_and_parse("/storage"+path, {"uid": username}, "itemExists"):
+                flash('File "' + path + '" already exists!')
+                return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, description=description, direction=direction, autoimport=autoimport))
+
             description = request.form['description']
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], timename))
 
