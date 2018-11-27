@@ -211,8 +211,10 @@ $("#searchcorpus").on("keyup", function() {
             for (let i=0; i<data.result.length; i++) {
                 $("#searchresult").append('<li><a href="/show_corpus/'+data.result[i]+'">'+data.result[i]+'</a></li>');
             }
+            $("#searchresult").css("visibility", "visible");
         });
     } else {
+        $("#searchresult").css("visibility", "hidden");
         $("#searchresult")[0].innerHTML = "";
     }
 });

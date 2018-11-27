@@ -144,3 +144,16 @@ table.borders td {
     visibility: visible;
     opacity: 1;
 }
+
+#searchresult {
+    visibility: hidden;
+    background: #E6E6E6;
+    list-style-type: none;
+    word-wrap: break-word;
+    padding: 5px;
+    width: 360px;
+    border-radius: 3px;
+    border: 1px solid black;
+    position: absolute;
+    z-index: 1
+}
