@@ -41,7 +41,7 @@ class XmlParser:
 
     def recursiveGroups(self, element):
         for child in element:
-            if child.tag == "member_of":
+            if child.tag == "member_of" and child.text:
                 self.elementList = child.text.split(",")
             self.recursiveGroups(child)
 

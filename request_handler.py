@@ -1,16 +1,17 @@
 import requests
 import html
+import os
 
 class RequestHandler:
 
     def __init__(self):
         self.s = requests.Session()
         self.s.cert = (
-            "/var/www/cert/vm1637.kaj.pouta.csc.fi/user/certificates/developers@localhost.crt",
-            "/var/www/cert/vm1637.kaj.pouta.csc.fi/user/keys/developers@localhost.key"
+            os.environ["BACKENDCERT"],
+            os.environ["BACKENDKEY"]
         )
-        self.s.verify = "/var/www/cert/vm1637.kaj.pouta.csc.fi/ca.crt"
-        self.root_url = "https://vm1637.kaj.pouta.csc.fi:443/ws"
+        self.s.verify = os.environ["BACKENDCA"]
+        self.root_url = os.environ["BACKENDURL"]
 
     def get(self, url, params):
         r = self.s.get(self.root_url+url, params=params)
@@ -33,13 +34,3 @@ class RequestHandler:
         r = self.s.delete(self.root_url+url, params=params)
         return r.text
 
-'''
-rh = RequestHandler()
-
-print(rh.upload(
-    "/storage/corpustest2/mikkotest/uploads/html/fi/2.html",
-    {"uid": "mikkotest", "action": "import"},
-    "2.html"
-    )
-)
-'''
