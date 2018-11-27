@@ -468,7 +468,8 @@ def upload_file():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             timename = str(time.time())+"###TIME###"+filename
-            path = request.form['path']
+            path = "/".join(request.form['path'].split("/")[:-1])+"/"+filename
+            print(rh.get("/storage"+path, {"uid": username}))
             description = request.form['description']
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], timename))
 

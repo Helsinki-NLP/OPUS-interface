@@ -58,9 +58,7 @@ table.borders td {
 }
 
 #filename {
-    position: relative;
-    top: 5px;
-    max-width: 228px;
+    margin: 5px;
     word-wrap: break-word;
     display: inline-block;
 }
