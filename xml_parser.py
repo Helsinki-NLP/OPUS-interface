@@ -172,18 +172,18 @@ class XmlParser:
         return info 
 
     def getFileContent(self):
+        parse = False
         content = ""
         for line in self.xmlData:
-            self.parseLine(line)
-            if self.start == "entry":
-                newcontent = html.unescape(line).strip()
-                if newcontent[:7] == "<entry>":
-                    newcontent = newcontent[7:]
-                if newcontent[-8:] == "</entry>":
-                    newcontent = newcontent[:-8]
-                content += newcontent + "\n"
-            if self.end == "entry":
+            line = line.strip()
+            if line[:7] == "<entry>":
+                parse = True
+                line = line[7:]
+            if line[-8:] == "</entry>":
+                parse = False
                 break
+            if parse:
+                content += line + "\n"
         return content
 
     def itemExists(self):
