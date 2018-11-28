@@ -143,13 +143,21 @@ table.borders td {
     opacity: 1;
 }
 
+#searchdiv {
+    position: relative;
+    padding: 20px;
+    float: right;
+}
+
 #searchresult {
     visibility: hidden;
     background: #E6E6E6;
     list-style-type: none;
     word-wrap: break-word;
     padding: 5px;
-    width: 360px;
+    margin: 15px;
+    left: 0;
+    right: 0;
     border-radius: 3px;
     border: 1px solid black;
     position: absolute;
