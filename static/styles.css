@@ -82,12 +82,12 @@ table.borders td {
 
 .content-cell {
     vertical-align: top;
-    height: 600px;
+    height: 70vh;
 }
 
 .align-files-cell {
     vertical-align: top;
-    height: 300px;
+    height: 35vh;
 }
 
 .tree-list {
