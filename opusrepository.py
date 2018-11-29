@@ -154,12 +154,12 @@ def create_corpus():
             flash('Corpus "' + corpusName + '" already exists!')
             return render_template("create_corpus.html", groups=groups, name=corpusName, settings=field_dict, ftype="create", corpus_creation_options=corpus_creation_options)
 
-        response = rh.put("/storage/"+corpusName+"/"+username, parameters)
+        response = rh.post("/storage/"+corpusName+"/"+username, parameters)
 
         for key in field_dict.keys():
             parameters[field_dict[key][0]] = html.escape(field_dict[key][1])
         
-        response = rh.put("/metadata/"+corpusName+"/"+username, parameters)
+        response = rh.post("/metadata/"+corpusName+"/"+username, parameters)
             
         flash('Corpus "' + html.unescape(corpusName) + '" created!')
         return redirect(url_for('show_corpus', corpusname=html.unescape(corpusName)))
