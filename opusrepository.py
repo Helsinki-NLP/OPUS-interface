@@ -113,9 +113,9 @@ def initialize_field_dict():
         "document_alignment": ["AlignPara_search_parallel", "identical-names"],
         "sentence_alignment": ["AlignPara_method", "bisent"],
         "sentence_splitter": ["ImportPara_splitter", "udpipe"],
-        "autoalignment": ["ImportPara_autoalign", "on"],
-        "autoparsing": ["ImportPara_autoparse", "on"],
-        "autowordalign": ["ImportPara_autowordalign", "on"]
+        "autoalignment": ["ImportPara_autoalign", "on"]
+        #"autoparsing": ["ImportPara_autoparse", "on"],
+        #"autowordalign": ["ImportPara_autowordalign", "on"]
     }
 
     return field_dict
@@ -135,7 +135,8 @@ def create_corpus():
         corpusName = html.escape(request.form["name"])
 
         for key in field_dict.keys():
-            if key in ["autoalignment", "autoparsing", "autowordalign"]:
+            #if key in ["autoalignment", "autoparsing", "autowordalign"]:
+            if key == "autoalignment":
                 field_dict[key][1] = "on"
                 if key not in request.form.keys():
                     field_dict[key][1] = "off"
