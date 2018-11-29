@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, send_file, send_from_directory
-from wtforms import Form, BooleanField, TextField, PasswordField, validators
+from wtforms import Form, BooleanField, StringField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from pymysql import escape_string as thwart
 import gc
@@ -670,8 +670,8 @@ def login_page():
         return render_template("login.html", error=error)
 
 class RegistrationForm(Form):
-    username = TextField('Username', [validators.Length(min=4, max=20)])
-    email = TextField('Email Address', [validators.Length(min=6, max=50)])
+    username = StringField('Username', [validators.Length(min=4, max=20)])
+    email = StringField('Email Address', [validators.Length(min=6, max=50)])
     password = PasswordField('New Password', [
         validators.DataRequired(),
         validators.EqualTo('confirm', message='Passwords must match')
@@ -686,7 +686,7 @@ def register_page():
         if request.method == "POST" and form.validate():
             username = form.username.data
             email = form.email.data
-            password = sha256_crypt.encrypt((str(form.password.data)))
+            password = sha256_crypt.hash((str(form.password.data)))
             c, conn = connection()
 
             x =  c.execute("SELECT * FROM users WHERE username = (%s)", (thwart(username)))

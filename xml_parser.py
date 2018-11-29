@@ -53,7 +53,7 @@ class XmlParser:
 
     def recursiveCorpora(self, element):
         for child in element:
-            if element.tag == "list":
+            if element.tag == "list" and "path" in child.attrib.keys():
                 m = re.search("^(.*)\/", child.attrib["path"])
                 if m.group(1) not in self.elementList:
                     self.elementList.append(m.group(1))
