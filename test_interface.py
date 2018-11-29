@@ -76,10 +76,12 @@ def test_registering(client):
 
 def test_access_frontpage(client):
     rv = client.get('/', follow_redirects=True)
-    assert b'You need to login first' in rv.data and b'type="submit" value="Login"' in rv.data
+    assert b'You need to login first' in rv.data 
+    assert b'type="submit" value="Login"' in rv.data
     login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
     rv = client.get('/', follow_redirects=True)
-    assert b'My corpora' in rv.data and b'My groups' in rv.data
+    assert b'My corpora' in rv.data 
+    assert b'My groups' in rv.data
     
 def test_allowed_file():
     extensions = ['pdf', 'doc', 'txt', 'xml', 'html', 'tar', 'gz']
@@ -101,7 +103,7 @@ def test_recursiveGroups():
         '<entry id="mikkotest" kind="user info">\
             <member>mikkotest</member>\
             <my_group>mikkotest</my_group>\
-        </entry>'
+    </entry>'
     ))
 
     assert len(parser.elementList) == 0
@@ -112,7 +114,8 @@ def test_recursiveGroups():
             <my_group>mikkotest</my_group>\
         </entry>'
     ))
-    assert parser.elementList[0] == "mikkotest" and parser.elementList[1] == "public"
+    assert parser.elementList[0] == "mikkotest" 
+    assert parser.elementList[1] == "public"
 
 def test_groupsForUser():
     xml_data = [
@@ -129,7 +132,8 @@ def test_groupsForUser():
     ]
     parser = xml_parser.XmlParser(xml_data)
     groups = parser.groupsForUser()
-    assert groups[0] == "mikkotest" and groups[1] == "public"
+    assert groups[0] == "mikkotest" 
+    assert groups[1] == "public"
 
 def test_recursiveCorpora():
     parser = xml_parser.XmlParser([])
@@ -147,7 +151,8 @@ def test_recursiveCorpora():
             '<entry path="mikkocorpus2/mikkotest" />'\
         '</list>'
     ))
-    assert parser.elementList[0] == "mikkocorpus" and parser.elementList[1] == "mikkocorpus2"
+    assert parser.elementList[0] == "mikkocorpus" 
+    assert parser.elementList[1] == "mikkocorpus2"
 
     parser.recursiveCorpora(ET.fromstring(
         '<list path="">'\
@@ -155,5 +160,215 @@ def test_recursiveCorpora():
             '<entry path="mikkocorpus2/mikkotest" />'\
         '</list>'
     ))
-    assert len(parser.elementList) == 2 and parser.elementList[0] == "mikkocorpus" and parser.elementList[1] == "mikkocorpus2"
-          
+    assert len(parser.elementList) == 2 
+    assert parser.elementList[0] == "mikkocorpus" 
+    assert parser.elementList[1] == "mikkocorpus2"
+      
+def test_corporaForUser():
+    xml_data = [
+        '<letsmt-ws version="56">'\
+            '<list path="">'\
+                '<entry path="mikkocorpus2/mikkotest" />'\
+                '<entry path="mikkocorpus/mikkotest" />'\
+            '</list>'\
+            '<status code="0" location="/metadata" operation="GET" type="ok">Found 2 matching entries</status>'\
+        '</letsmt-ws>'
+    ]
+
+    parser = xml_parser.XmlParser(xml_data)
+    corpora = parser.corporaForUser()
+
+    assert corpora[0] == "mikkocorpus2" 
+    assert corpora[1] == "mikkocorpus"
+
+def test_recursiveCollect():
+    element = ET.fromstring(
+        '<list path="/mikkocorpus">'\
+            '<entry kind="branch" path="/mikkocorpus/mikkotest">'\
+                '<name>mikkotest</name>'\
+                '<group>public</group>'\
+                '<owner>mikkotest</owner>'\
+            '</entry>'\
+        '</list>'
+    )
+    parser = xml_parser.XmlParser([])
+    parser.recursiveCollect(element, "name")
+    assert parser.elementList[-1] == "mikkotest"
+    parser.recursiveCollect(element, "group")
+    assert parser.elementList[-1] == "public"
+
+def test_collectToList():
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '<list path="/mikkocorpus">',
+                '<entry kind="branch" path="/mikkocorpus/mikkotest">',
+                    '<name>mikkotest</name>',
+                    '<group>public</group>',
+                    '<owner>mikkotest</owner>',
+                '</entry>',
+            '</list>',
+            '<status code="0" location="/storage/mikkocorpus" operation="GET" type="ok"></status>',
+        '</letsmt-ws>'
+    ] 
+
+    parser = xml_parser.XmlParser(xml_data)
+    elementlist = parser.collectToList("group")
+    assert len(elementlist) == 1 
+    assert elementlist[0] == "public"
+
+def test_branchesForCorpus():
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '<list path="/mikkocorpus">',
+                '<entry kind="branch" path="/mikkocorpus/mikkotest">',
+                    '<name>mikkotest</name>',
+                    '<group>public</group>',
+                    '<owner>mikkotest</owner>',
+                '</entry>',
+            '</list>',
+            '<status code="0" location="/storage/mikkocorpus" operation="GET" type="ok"></status>',
+        '</letsmt-ws>'
+    ] 
+
+    parser = xml_parser.XmlParser(xml_data)
+    branches = parser.branchesForCorpus()
+    assert len(branches) == 1 
+    assert branches[0] == "mikkotest"
+
+def test_getUsers():
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '<list path="/group/">',
+                '<entry id="public" kind="group" owner="admin">',
+                    '<user>user1</user>',
+                    '<user>user2</user>',
+                    '<user>user3</user>',
+                    '<user>user4</user>',
+                '</entry>',
+            '</list>',
+            '<status code="0" location="/group/public" operation="GET" type="ok"></status>',
+        '</letsmt-ws>'
+    ]
+    
+    parser = xml_parser.XmlParser(xml_data)
+    users = parser.getUsers()
+    assert len(users) == 4 
+    assert users[0] == "user1" 
+    assert users[3] == "user4"
+
+def test_navigateDirectory():
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '<list path="/mikkocorpus/mikkotest/uploads">',
+                '<entry kind="file">',
+                    '<name>html.tar.gz</name>',
+                    '<commit revision="HEAD">',
+                        '<author>mikkotest</author>',
+                        '<date>unknown</date>',
+                    '</commit>',
+                    '<group>public</group>',
+                    '<owner>mikkotest</owner>',
+                    '<size>14210</size>',
+                '</entry>',
+                '<entry kind="dir">',
+                      '<name>html</name>',
+                      '<commit revision="HEAD">',
+                          '<author>mikkotest</author>',
+                          '<date>unknown</date>',
+                      '</commit>',
+                      '<group>public</group>',
+                      '<owner>mikkotest</owner>',
+                '</entry>',
+            '</list>',
+            '<status code="0" location="/storage/mikkocorpus/mikkotest/uploads" operation="GET" type="ok"></status>',
+        '</letsmt-ws>'
+    ]
+
+    parser = xml_parser.XmlParser(xml_data)
+    dirs = parser.navigateDirectory()
+
+    assert len(dirs) == 2
+    assert dirs[0][0] == "html.tar.gz"
+    assert dirs[0][1] == "file"
+    assert dirs[1][0] == "html"
+    assert dirs[1][1] == "dir"
+
+def test_getMonolingualAndParallel():
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '<list path="">',
+                '<entry path="mikkocorpus/mikkotest">',
+                    '<name>mikkotest</name>',
+                    '<gid>public</gid>',
+                    '<import_queue></import_queue>',
+                    '<langs>fi,en,sv</langs>',
+                    '<modif>2018-11-27 14:05:14</modif>',
+                    '<origin></origin>',
+                    '<owner>mikkotest</owner>',
+                    '<parallel-langs>fi-sv,en-fi,en-sv</parallel-langs>',
+                '</entry>',
+            '</list>',
+            '<status code="0" location="/metadata/mikkocorpus/mikkotest" operation="GET" type="ok">Found matching path ID. Listing all of its properties</status>',
+        '</letsmt-ws>'
+    ]
+
+    parser = xml_parser.XmlParser(xml_data)
+    mopa = parser.getMonolingualAndParallel()
+    assert len(mopa[0]) == 3
+    assert len(mopa[1]) == 3
+    for lan in [["fi", "dir"], ["sv", "dir"], ["en", "dir"]]:
+        assert lan in mopa[0]
+    for lan in [["fi-sv", "dir"], ["en-sv", "dir"], ["en-fi", "dir"]]:
+        assert lan in mopa[1]
+
+def test_recursiveMetadata():
+    element = ET.fromstring(
+        '<entry path="mikkocorpus/mikkotest/uploads/html.tar.gz">'\
+              '<description>test</description>'\
+              '<direction>unknown</direction>'\
+              '<gid>public</gid>'\
+              '<owner>mikkotest</owner>'\
+              '<status>job canceled</status>'\
+        '</entry>'
+    )
+
+    parser = xml_parser.XmlParser([])
+    parser.recursiveMetadata(element)
+    correct = {
+        "description": "test",
+        "direction": "unknown",
+        "gid": "public",
+        "owner": "mikkotest",
+        "status": "job canceled"
+    }
+    for key in correct.keys():
+        assert parser.elementDict[key] == correct[key]
+
+def test_getMetadata():
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '<list path="">',
+            '<entry path="mikkocorpus/mikkotest/uploads/html.tar.gz">',
+                  '<description>test</description>',
+                  '<direction>unknown</direction>',
+                  '<gid>public</gid>',
+                  '<owner>mikkotest</owner>',
+                  '<status>job canceled</status>',
+            '</entry>',
+            '</list>',
+            '<status code="0" location="/metadata/mikkocorpus/mikkotest/uploads/html.tar.gz" operation="GET" type="ok">Found matching path ID. Listing all of its properties</status>',
+        '</letsmt-ws>'
+    ]
+
+    parser = xml_parser.XmlParser(xml_data)
+    metadata = parser.getMetadata()
+    correct = {
+        "description": "test",
+        "direction": "unknown",
+        "gid": "public",
+        "owner": "mikkotest",
+        "status": "job canceled"
+    }
+    for key in correct.keys():
+        assert metadata[key] == correct[key]
+
