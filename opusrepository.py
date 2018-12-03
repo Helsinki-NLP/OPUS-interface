@@ -458,7 +458,7 @@ def upload_file():
         else:
             flash("Invalid upload path")
             return redirect(url_for("index"))
-        language = ""
+        language = "detect"
         if "language" in request.form.keys():
             language = request.form['language']
         description = request.form['description']
