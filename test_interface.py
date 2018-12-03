@@ -505,3 +505,19 @@ def test_itemExists():
     parser = xml_parser.XmlParser(xml_data)
 
     assert parser.itemExists() == False
+    
+def test_rh_get():
+    assert True
+
+def test_rh_put():
+    assert True
+
+def test_rh_post():
+    assert True
+
+def test_rh_upload():
+    assert True
+
+def test_rh_delete():
+    assert True
+
