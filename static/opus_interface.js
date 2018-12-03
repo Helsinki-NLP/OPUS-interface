@@ -190,7 +190,7 @@ function subdir_to_list(directories, id_name){
     for (let i=0; i<directories.length; i++) {
         let subdir = id_name+"-_-"+directories[i][0];
         subdir = subdir.replace(/\./g, "-_DOT_-");    
-        $("#"+id_name).append('<li id="'+subdir+'" ptype="' + directories[i][1] + '" opened="none"><span style="cursor: pointer">'+directories[i][0]+'</span></li>');
+        $("#"+id_name).append('<li class="tree-list-item" id="'+subdir+'" ptype="' + directories[i][1] + '" opened="none">'+directories[i][0]+'</li>');
         let ptype = directories[i][1];
         if (ptype == "dir") {
             $("#"+subdir).on("click", function() {
@@ -246,16 +246,16 @@ function open_subdir(subdir) {
             subdir_id = subdir_id.replace(/\./g, "-_DOT_-");
             let ptype = subdirs[i][1];
             if (ptype == "dir") {
-                subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><span style="cursor: pointer">'+subdirs[i][0]+'</span></li>';
+                subdir_list += '<li class="tree-list-item" id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none">'+subdirs[i][0]+'</li>';
                 $(document).on("click", "#"+subdir_id, function() {
                     open_or_close(subdir_id);
                 });
             } else if (ptype == "file") {
                 if (subdir.match("^align")) {
-                    subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><button id="'+subdir_id+'-align">+</button><span id="'+subdir_id+'-file" style="cursor: pointer">'+subdirs[i][0]+'</span></li>';
+                    subdir_list += '<li class="tree-list-item" id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><button id="'+subdir_id+'-align">+</button><span id="'+subdir_id+'-file">'+subdirs[i][0]+'</span></li>';
                     processAlignment(subdirs[i][0], subdir_id, subdir);
                 } else {
-                    subdir_list += '<li id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><span style="cursor: pointer">'+subdirs[i][0]+'</span></li>';
+                    subdir_list += '<li class="tree-list-item" id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none">'+subdirs[i][0]+'</li>';
                     processFile(subdirs[i][0], subdir_id, subdir);
                 }
             }
