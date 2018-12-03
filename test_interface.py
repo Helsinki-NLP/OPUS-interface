@@ -372,3 +372,136 @@ def test_getMetadata():
     for key in correct.keys():
         assert metadata[key] == correct[key]
 
+def test_getAlignmentCandidates():
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '<list path="mikkocorpus/mikkotest/">',
+                '<entry path="mikkocorpus/mikkotest/xml/en/html/ajokielto.xml">',
+                    '<align-candidates>xml/fi/html/ajokielto.xml</align-candidates>',
+                    '<aligned_with>xml/fi/html/ajokielto.xml,xml/sv/html/ajokielto.xml</aligned_with>',
+                    '<gid>public</gid>',
+                    '<imported_from>uploads/html.tar.gz:html/en/ajokielto.html</imported_from>',
+                    '<language>en</language>',
+                    '<owner>mikkotest</owner>',
+                    '<parsed>ud/en/html/ajokielto.xml</parsed>',
+                    '<resource-type>corpusfile</resource-type>',
+                    '<size>38</size>',
+                    '<status>successfully aligned with mikkocorpus/mikkotest/xml/sv/html/ajokielto.xml</status>',
+                '</entry>',
+            '</list>',
+            '<status code="0" location="/metadata/mikkocorpus/mikkotest" operation="GET" type="ok">Found 1 matching entries</status>',
+        '</letsmt-ws>'
+    ]
+    parser = xml_parser.XmlParser(xml_data)
+    candidates = parser.getAlignCandidates()
+    correct = {'en/html/ajokielto.xml': ['fi/html/ajokielto.xml']}
+
+    for key in correct.keys():
+        for item in correct[key]:
+            assert item in candidates[key]
+
+def test_recursiveAttrTag():
+    element = ET.fromstring(
+        '<list path="/group/">'\
+            '<entry id="mikkotest" kind="group" owner="mikkotest" testattr="testvalue">'\
+                '<user>mikkotest</user>'\
+            '</entry>'\
+        '</list>'
+    )
+    parser = xml_parser.XmlParser([])
+    parser.recursiveAttrTag(element, "entry", "testattr")
+    
+    assert parser.elementString == "testvalue"
+
+def test_getAttrFromTag():
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '<list path="/group/">',
+                '<entry id="mikkotest" kind="group" owner="mikkotest" testattr="testvalue">',
+                    '<user>mikkotest</user>',
+                '</entry>',
+            '</list>',
+            '<status code="0" location="/group/mikkotest" operation="GET" type="ok"></status>',
+        '</letsmt-ws>'
+    ]
+    parser = xml_parser.XmlParser(xml_data)
+    assert parser.getAttrFromTag("entry", "testattr") == "testvalue"
+
+def test_getGroupOwner():
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '<list path="/group/">',
+                '<entry id="mikkotest" kind="group" owner="mikkotest" testattr="testvalue">',
+                    '<user>mikkotest</user>',
+                '</entry>',
+            '</list>',
+            '<status code="0" location="/group/mikkotest" operation="GET" type="ok"></status>',
+        '</letsmt-ws>'
+    ]
+    parser = xml_parser.XmlParser(xml_data)
+    assert parser.getGroupOwner() == "mikkotest"
+
+def test_getJobs():
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '<list path="jobs">',
+                '<entry name="job_1543831841_642742498" file="mikkocorpus/mikkotest/uploads/html.tar.gz" id="890" job="mikkocorpus/mikkotest/jobs/import/uploads/html.tar.gz.xml" status="RUNNING" />',
+            '</list>',
+            '<status code="0" location="job" operation="GET" type="ok" />',
+        '</letsmt-ws>'
+    ]
+    parser = xml_parser.XmlParser(xml_data)
+    jobs = parser.getJobs()
+    assert jobs[0][0] == "mikkocorpus/mikkotest/uploads/html.tar.gz"
+    assert jobs[0][1] == "RUNNING"
+    
+def test_getFileContent():
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '<list path="/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml">',
+                '<entry><?xml version="1.0" encoding="utf-8"?>',
+                '<letsmt version="1.0">',
+                '<p id="1">',
+                '<s id="1">If a person is sentenced to a punishment for causing a serious traffic hazard, driving while intoxicated or driving while seriously intoxicated, the court also imposes a driving ban for at most five years.</s>',
+                '</p>',
+                '</entry>',
+            '</list>',
+            '<status code="0" location="/storage/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml" operation="GET" type="ok"></status>',
+        '</letsmt-ws>'
+    ]
+    parser = xml_parser.XmlParser(xml_data)
+    content = parser.getFileContent()
+
+    correct = '<?xml version="1.0" encoding="utf-8"?>\n'\
+    '<letsmt version="1.0">\n'\
+    '<p id="1">\n'\
+    '<s id="1">If a person is sentenced to a punishment for causing a serious traffic hazard, driving while intoxicated or driving while seriously intoxicated, the court also imposes a driving ban for at most five years.</s>\n'\
+    '</p>\n'
+
+    assert content == correct
+
+def test_itemExists():
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '<list path="/mikkocorpus">',
+                '<entry kind="branch" path="/mikkocorpus/mikkotest">',
+                    '<name>mikkotest</name>',
+                    '<group>public</group>',
+                    '<owner>mikkotest</owner>',
+                '</entry>',
+            '</list>',
+            '<status code="0" location="/storage/mikkocorpus" operation="GET" type="ok"></status>',
+        '</letsmt-ws>'
+    ]
+    parser = xml_parser.XmlParser(xml_data)
+    
+    assert parser.itemExists() == True
+        
+    xml_data = [
+        '<letsmt-ws version="56">',
+            '''<status code="6" location="/storage/mikkocorpusdoesnotexist" operation="GET" type="error">Cannot find/read slot 'mikkocorpusdoesnotexist'</status>''',
+        '</letsmt-ws>'
+    ]
+    parser = xml_parser.XmlParser(xml_data)
+
+    assert parser.itemExists() == False
