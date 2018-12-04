@@ -430,6 +430,7 @@ def get_subdirs():
         username = session['username']
 
     subdir = subdir.replace("-_-", "/")
+    subdir = subdir.replace("-_DOT_-", ".")
     subdir = subdir.replace("monolingual", "xml")
     subdir = subdir.replace("align-source-files", "xml")
     subdir = subdir.replace("align-target-files", "xml")
