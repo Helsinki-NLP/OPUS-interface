@@ -23,11 +23,11 @@ function update_branch() {
     });
 }
 
-function formulate_datapath(datapath) {
+function formulate_datapath(datapath, parallel_format) {
     datapath = datapath.replace(/-_-/g, "/");
     datapath = datapath.replace(/-_DOT_-/g, ".");
     datapath = datapath.replace("monolingual", "xml");
-    datapath = datapath.replace("parallel", "xml");
+    datapath = datapath.replace("parallel", parallel_format);
     return "/" + $("#corpusname").text() + "/" + $("#branch").val() + "/" + datapath;
 }
 
@@ -41,7 +41,7 @@ function showMetadata(datapath) {
     $("#file-metadata").text("");
     $("#file-content").text("");
     $("#editmetadata").css("display", "none");
-    let path = formulate_datapath(datapath);
+    let path = formulate_datapath(datapath, "xml");
     let inUploads = path.startsWith("/" + $("#corpusname").text() + "/" + $("#branch").val() + "/uploads/");
     $.getJSON(baseurl+"/get_metadata", {
         path: path
@@ -75,7 +75,7 @@ function showMetadata(datapath) {
 var inputmn = 0;
 
 function editMetadata(datapath) {
-    let path = formulate_datapath(datapath);
+    let path = formulate_datapath(datapath, "xml");
     if ($("#editmetadata").attr("edit") == "false") {
         $("#editmetadata").attr("edit", "true");
         $(".metadatatext").css("display", "none");
@@ -119,7 +119,7 @@ function editMetadata(datapath) {
 
 function showFilecontent(datapath, windowid) {
     $(windowid).text("");
-    let path = formulate_datapath(datapath);
+    let path = formulate_datapath(datapath, "tmx");
     $.getJSON(baseurl+"/get_filecontent", {
         path: path
     }, function(data) {
@@ -145,7 +145,7 @@ function handleImport(path, command) {
 }
 
 function importFile(datapath) {
-    let path = formulate_datapath(datapath);
+    let path = formulate_datapath(datapath, "xml");
     let command = $("#importfile").text();
     handleImport(path, command);
     update_branch();
@@ -153,7 +153,7 @@ function importFile(datapath) {
 }
 
 function deleteFile(datapath, subdirname) {
-    let path = formulate_datapath(datapath);
+    let path = formulate_datapath(datapath, "xml");
     if (confirm('Are you sure you want to delete "' + path + '"?')) {
         $.getJSON(baseurl+"/delete_file", {
             path: path
@@ -173,7 +173,7 @@ function deleteFile(datapath, subdirname) {
 }
 
 function downloadFile(datapath, filename) {
-    let path = formulate_datapath(datapath);
+    let path = formulate_datapath(datapath, "tmx");
     window.location.href = baseurl+"/download_file?path="+path+"&filename="+filename;
     /*
     console.log(path, filename);
@@ -489,7 +489,7 @@ function processFile(filename, path, root) {
 
 function editAlignment(path) {
     $.getJSON(baseurl+"/edit_alignment", {
-        path: formulate_datapath(path)
+        path: formulate_datapath(path, "xml")
     }, function(data) {
         $("#messages")[0].innerHTML = "";
         $("#messages").append('<li>Preparing Interactive Sentence Alignment...</li>');
