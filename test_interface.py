@@ -5,6 +5,8 @@ import pytest
 
 import opusrepository
 import xml_parser
+import request_handler
+rh = request_handler.RequestHandler()
 
 @pytest.fixture
 def client():
@@ -506,18 +508,68 @@ def test_itemExists():
 
     assert parser.itemExists() == False
     
-def test_rh_get():
-    assert True
+def test_rh_get_storage():
+    response = rh.get("/storage/mikkocorpus/mikkotest", {"uid": "mikkotest"})
+    texts = [
+        '<letsmt-ws version="56">',
+        '<list path="/mikkocorpus/mikkotest">',
+        '<name>uploads</name>',
+        '<name>xml</name>',
+        '<status code="0" location="/storage/mikkocorpus/mikkotest" operation="GET" type="ok"></status>'
+    ]
+    for text in texts:
+        assert text in response
 
-def test_rh_put():
-    assert True
+def test_rh_get_download():
+    response = rh.get("/storage/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml", {"uid": "mikkotest", "action": "download", "archive": "0"})
+    texts = [
+        '<?xml version="1.0" encoding="utf-8"?>',
+        '<letsmt version="1.0">',
+        '<s id="2">The police may impose a driving ban also for other violations.</s>',
+        '<s id="38">European Court of Human Rights</s>',
+        '</letsmt>'
+    ]
+    for text in texts:
+        assert text in response
+
+def test_rh_get_getFileContent():
+    response = rh.get("/storage/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml", {"uid": "mikkotest", "action": "cat", "to": "1"})
+    assert len(response.split("\n")) == 9
+    response = rh.get("/storage/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml", {"uid": "mikkotest", "action": "cat", "to": "5"})
+    assert len(response.split("\n")) == 13
+    assert '<s id="1">If a person is sentenced to a punishment for causing a serious traffic hazard, driving while intoxicated or driving while seriously intoxicated, the court also imposes a driving ban for at most five years.</s>' in response
 
 def test_rh_post():
-    assert True
+    rh.post("/metadata/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml", {"uid": "mikkotest", "testkey": "testvalue"})
+    xml_metadata = rh.get("/metadata/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml", {"uid": "mikkotest"})
+    parser = xml_parser.XmlParser(xml_metadata.split("\n"))
+    metadata = parser.getMetadata()
+    assert metadata["testkey"] == "testvalue"
+    rh.post("/metadata/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml", {"uid": "mikkotest", "testkey": "testvalue2"})
+    xml_metadata = rh.get("/metadata/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml", {"uid": "mikkotest"})
+    parser = xml_parser.XmlParser(xml_metadata.split("\n"))
+    metadata = parser.getMetadata()
+    assert metadata["testkey"] == "testvalue2"
 
-def test_rh_upload():
-    assert True
+def test_rh_put():
+    rh.post("/metadata/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml", {"uid": "mikkotest", "testkey": "testvalue"})
+    xml_metadata = rh.get("/metadata/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml", {"uid": "mikkotest"})
+    parser = xml_parser.XmlParser(xml_metadata.split("\n"))
+    metadata = parser.getMetadata()
+    assert metadata["testkey"] == "testvalue"
+    rh.put("/metadata/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml", {"uid": "mikkotest", "testkey": "testvalue2"})
+    xml_metadata = rh.get("/metadata/mikkocorpus/mikkotest/xml/en/html/ajokielto.xml", {"uid": "mikkotest"})
+    parser = xml_parser.XmlParser(xml_metadata.split("\n"))
+    metadata = parser.getMetadata()
+    assert "testvalue" in metadata["testkey"] and "testvalue2" in metadata["testkey"]
 
-def test_rh_delete():
-    assert True
+def test_rh_upload_and_delete():
+    response = rh.upload("/storage/mikkocorpus/mikkotest/uploads/test/test.txt", {"uid": "mikkotest"}, opusrepository.UPLOAD_FOLDER+"/test.txt")
+    assert '<status code="0" location="/storage/mikkocorpus/mikkotest/uploads/test/test.txt" operation="POST" type="ok">update ok /mikkocorpus/mikkotest/uploads/test/test.txt</status>' in response
+    response = rh.get("/storage/mikkocorpus/mikkotest/uploads/test/test.txt", {"uid": "mikkotest"})
+    assert '<name>test.txt</name>' in response 
+    response = rh.delete("/storage/mikkocorpus/mikkotest/uploads/test/test.txt", {"uid": "mikkotest"})
+    assert '<status code="0" location="/storage/mikkocorpus/mikkotest/uploads/test/test.txt" operation="DELETE" type="ok">Deleted /storage/mikkocorpus/mikkotest/uploads/test/test.txt</status>' in response
+    response = rh.get("/storage/mikkocorpus/mikkotest/uploads/test/test.txt", {"uid": "mikkotest"})
+    assert '<name>test.txt</name>' not in response 
 
