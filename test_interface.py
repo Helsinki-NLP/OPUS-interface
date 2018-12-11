@@ -15,85 +15,6 @@ def client():
 
     yield client
 
-def login(client, username, password):
-    return client.post('/login/', data=dict(
-        username=username,
-        password=password
-    ), follow_redirects=True)
-
-def logout(client):
-    return client.get('/logout', follow_redirects=True)
-
-def test_login_logout(client):
-    rv = login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
-    assert b'You are now logged in' in rv.data
-    rv = logout(client)
-    assert b'You have been logged out!' in rv.data
-    rv = login(client, os.environ["TESTUSER"], "wrongpassword")
-    assert b'Invalid credentials, try again.' in rv.data
-    rv = login(client, "wrongusername", os.environ["TESTPW"])
-    assert b'Invalid credentials, try again.' in rv.data
-
-def test_registering(client):
-    rv = client.get('/register/')
-    assert b'Register' in rv.data
-
-    rv = client.post('/register/', data=dict(
-        username = "",
-        email = "123test456user789",
-        password = "123test456user789",
-        confirm = "123test456user789"
-    ), follow_redirects=True)
-    assert b'Field must be between 4 and 20 characters long.' in rv.data
-
-    rv = client.post('/register/', data=dict(
-        username = "123test456user789",
-        email = "",
-        password = "123test456user789",
-        confirm = "123test456user789"
-    ), follow_redirects=True)
-    assert b'Field must be between 6 and 50 characters long.' in rv.data
-
-    rv = client.post('/register/', data=dict(
-        username = "123test456user789",
-        email = "123test456user789",
-        password = "123test456user789",
-        confirm = ""
-    ), follow_redirects=True)
-    assert b'Passwords must match' in rv.data
-
-    rv = client.post('/register/', data=dict(
-        username = "123test456user789",
-        email = "123test456user789",
-        password = "123test456user789",
-        confirm = "123test456user789"
-    ), follow_redirects=True)
-    assert b'Thanks for registering!' in rv.data
-
-    c, conn = opusrepository.connection()
-    c.execute("DELETE FROM users WHERE username = (%s)", "123test456user789")
-    conn.commit()
-    c.close()
-    conn.close()
-
-def test_access_frontpage(client):
-    rv = client.get('/', follow_redirects=True)
-    assert b'You need to login first' in rv.data 
-    assert b'type="submit" value="Login"' in rv.data
-    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
-    rv = client.get('/', follow_redirects=True)
-    assert b'My corpora' in rv.data 
-    assert b'My groups' in rv.data
-    
-def test_allowed_file():
-    extensions = ['pdf', 'doc', 'txt', 'xml', 'html', 'tar', 'gz']
-    for extension in extensions:
-        print(opusrepository.allowed_file("ajokielto."+extension))
-        assert opusrepository.allowed_file("ajokielto."+extension)
-    invalid = ["ajokielto.exe", "ajokieltopdf"]
-    for i in invalid:
-        assert not opusrepository.allowed_file(i)
-
 def test_parseLine():
     parser = xml_parser.XmlParser([])
     result = parser.parseLine('<div test="attribute">hello</div>')
@@ -572,4 +493,114 @@ def test_rh_upload_and_delete():
     assert '<status code="0" location="/storage/mikkocorpus/mikkotest/uploads/test/test.txt" operation="DELETE" type="ok">Deleted /storage/mikkocorpus/mikkotest/uploads/test/test.txt</status>' in response
     response = rh.get("/storage/mikkocorpus/mikkotest/uploads/test/test.txt", {"uid": "mikkotest"})
     assert '<name>test.txt</name>' not in response 
+
+def login(client, username, password):
+    return client.post('/login/', data=dict(
+        username=username,
+        password=password
+    ), follow_redirects=True)
+
+def logout(client):
+    return client.get('/logout', follow_redirects=True)
+
+def test_login_logout(client):
+    rv = login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    assert b'You are now logged in' in rv.data
+    rv = logout(client)
+    assert b'You have been logged out!' in rv.data
+    rv = login(client, os.environ["TESTUSER"], "wrongpassword")
+    assert b'Invalid credentials, try again.' in rv.data
+    rv = login(client, "wrongusername", os.environ["TESTPW"])
+    assert b'Invalid credentials, try again.' in rv.data
+
+def test_registering(client):
+    rv = client.get('/register/')
+    assert b'Register' in rv.data
+
+    rv = client.post('/register/', data=dict(
+        username = "",
+        email = "123test456user789",
+        password = "123test456user789",
+        confirm = "123test456user789"
+    ), follow_redirects=True)
+    assert b'Field must be between 4 and 20 characters long.' in rv.data
+
+    rv = client.post('/register/', data=dict(
+        username = "123test456user789",
+        email = "",
+        password = "123test456user789",
+        confirm = "123test456user789"
+    ), follow_redirects=True)
+    assert b'Field must be between 6 and 50 characters long.' in rv.data
+
+    rv = client.post('/register/', data=dict(
+        username = "123test456user789",
+        email = "123test456user789",
+        password = "123test456user789",
+        confirm = ""
+    ), follow_redirects=True)
+    assert b'Passwords must match' in rv.data
+
+    rv = client.post('/register/', data=dict(
+        username = "123test456user789",
+        email = "123test456user789",
+        password = "123test456user789",
+        confirm = "123test456user789"
+    ), follow_redirects=True)
+    assert b'Thanks for registering!' in rv.data
+
+    c, conn = opusrepository.connection()
+    c.execute("DELETE FROM users WHERE username = (%s)", "123test456user789")
+    conn.commit()
+    c.close()
+    conn.close()
+
+def test_allowed_file():
+    extensions = ['pdf', 'doc', 'txt', 'xml', 'html', 'tar', 'gz']
+    for extension in extensions:
+        print(opusrepository.allowed_file("ajokielto."+extension))
+        assert opusrepository.allowed_file("ajokielto."+extension)
+    invalid = ["ajokielto.exe", "ajokieltopdf"]
+    for i in invalid:
+        assert not opusrepository.allowed_file(i)
+
+def test_get_group_owner():
+    assert opusrepository.get_group_owner("mikkotest", "mikkotest") == "mikkotest"
+
+def test_access_frontpage(client):
+    rv = client.get('/', follow_redirects=True)
+    assert b'You need to login first' in rv.data 
+    assert b'type="submit" value="Login"' in rv.data
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rv = client.get('/', follow_redirects=True)
+    assert b'My corpora' in rv.data 
+    assert b'My groups' in rv.data
+
+def test_create_corpus(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rv = client.get('/create_corpus')
+    assert b'Create Corpus' in rv.data
+    post_data = {
+        "name": "",
+        "group": "",
+        "domain": "",
+        "origin": "",
+        "description": "",
+        "pdf_reader": "",
+        "document_alignment": "",
+        "sentence_alignment": "",
+        "sentence_splitter": "",
+        "autoalignment": ""
+    }
+    rv = client.post('/create_corpus', data=post_data, follow_redirects=True)
+    assert b'Name must be ASCII only and must not contain spaces' in rv.data
+    post_data["name"] = "with space"
+    rv = client.post('/create_corpus', data=post_data, follow_redirects=True)
+    assert b'Name must be ASCII only and must not contain spaces' in rv.data
+    post_data["name"] = "1233test_corpus5678"
+    rv = client.post('/create_corpus', data=post_data, follow_redirects=True)
+    print(rv.data)
+    assert b'Corpus "1233test_corpus5678" created!' in rv.data
+    rh.delete("/storage/1233test_corpus5678", {"uid": os.environ["TESTUSER"]})
+
 
