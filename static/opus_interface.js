@@ -8,6 +8,8 @@ function update_branch() {
     $("#align-source-files").text("");
     $("#align-target-files").text("");
     $("#branch").val($("#choose-branch").val());
+    $(".header-next-to-button").css("top", "");
+    $(".header-button").css("display", "");
     $.getJSON(baseurl+"/get_branch", {
         corpusname: $("#corpusname").text(),
         branch: $("#choose-branch").val()
@@ -19,6 +21,10 @@ function update_branch() {
         subdir_to_list(data.monolingual, "align-target-files");
         if ($("#align-selection-table").css("display") == "table") {
             list_alignment_candidates();
+        }
+        if (data.owner) {
+            $(".header-button").css("display", "inline");
+            $(".header-next-to-button").css("top", "5px");
         }
     });
 }
