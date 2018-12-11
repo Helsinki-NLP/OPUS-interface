@@ -578,19 +578,20 @@ def test_access_frontpage(client):
 
 def test_create_corpus(client):
     login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rh.delete("/storage/1233test_corpus5678", {"uid": os.environ["TESTUSER"]})
     rv = client.get('/create_corpus')
     assert b'Create Corpus' in rv.data
     post_data = {
         "name": "",
-        "group": "",
-        "domain": "",
-        "origin": "",
-        "description": "",
-        "pdf_reader": "",
-        "document_alignment": "",
-        "sentence_alignment": "",
-        "sentence_splitter": "",
-        "autoalignment": ""
+        "group": "group",
+        "domain": "domain",
+        "origin": "origin",
+        "description": "description",
+        "pdf_reader": "pdf_reader",
+        "document_alignment": "document_alignment",
+        "sentence_alignment": "sentence_alignment",
+        "sentence_splitter": "sentence_splitter",
+        "autoalignment": "on"
     }
     rv = client.post('/create_corpus', data=post_data, follow_redirects=True)
     assert b'Name must be ASCII only and must not contain spaces' in rv.data
@@ -599,8 +600,148 @@ def test_create_corpus(client):
     assert b'Name must be ASCII only and must not contain spaces' in rv.data
     post_data["name"] = "1233test_corpus5678"
     rv = client.post('/create_corpus', data=post_data, follow_redirects=True)
-    print(rv.data)
-    assert b'Corpus "1233test_corpus5678" created!' in rv.data
+    assert b'Corpus &#34;1233test_corpus5678&#34; created!' in rv.data
+    xml_metadata = rh.get("/metadata/1233test_corpus5678/"+os.environ["TESTUSER"], {"uid": os.environ["TESTUSER"]})
+    parser = xml_parser.XmlParser(xml_metadata.split("\n"))
+    metadata = parser.getMetadata()
+    field_dict = opusrepository.initialize_field_dict()
+    for key in post_data.keys():
+        if key != "name":
+            assert post_data[key] == metadata[field_dict[key][0]]
+    rv = client.post('/create_corpus', data=post_data, follow_redirects=True)
+    assert b'Corpus &#34;1233test_corpus5678&#34; already exists!' in rv.data
     rh.delete("/storage/1233test_corpus5678", {"uid": os.environ["TESTUSER"]})
 
+def test_corpus_settings(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rh.delete("/storage/1233test_corpus5678", {"uid": os.environ["TESTUSER"]})
+    post_data = {
+        "name": "1233test_corpus5678",
+        "group": "group",
+        "domain": "domain",
+        "origin": "origin",
+        "description": "description",
+        "pdf_reader": "pdf_reader",
+        "document_alignment": "document_alignment",
+        "sentence_alignment": "sentence_alignment",
+        "sentence_splitter": "sentence_splitter",
+        "autoalignment": "on"
+    }
+    rv = client.post('/create_corpus', data=post_data, follow_redirects=True)
+    rv = client.get('/corpus_settings/1233test_corpus5678')
+    assert b'Corpus Settings' in rv.data
+    xml_metadata = rh.get("/metadata/1233test_corpus5678/"+os.environ["TESTUSER"], {"uid": os.environ["TESTUSER"]})
+    parser = xml_parser.XmlParser(xml_metadata.split("\n"))
+    metadata = parser.getMetadata()
+    field_dict = opusrepository.initialize_field_dict()
+    for key in post_data.keys():
+        if key != "name":
+            assert post_data[key] == metadata[field_dict[key][0]]
 
+    post_data = {
+        "name": "1233test_corpus5678",
+        "group": "group2",
+        "domain": "domain2",
+        "origin": "origin2",
+        "description": "description2",
+        "pdf_reader": "pdf_reader2",
+        "document_alignment": "document_alignment2",
+        "sentence_alignment": "sentence_alignment2",
+        "sentence_splitter": "sentence_splitter2",
+        "autoalignment": "off"
+    }
+    rv = client.post('/corpus_settings/1233test_corpus5678', data=post_data, follow_redirects=True)
+    xml_metadata = rh.get("/metadata/1233test_corpus5678/"+os.environ["TESTUSER"], {"uid": os.environ["TESTUSER"]})
+    parser = xml_parser.XmlParser(xml_metadata.split("\n"))
+    metadata = parser.getMetadata()
+    field_dict = opusrepository.initialize_field_dict()
+    for key in post_data.keys():
+        if key != "name":
+            assert post_data[key] == metadata[field_dict[key][0]]
+
+    rh.delete("/storage/1233test_corpus5678", {"uid": os.environ["TESTUSER"]})
+
+def test_remove_corpus(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rh.delete("/storage/1233test_corpus5678", {"uid": os.environ["TESTUSER"]})
+    post_data = {
+        "name": "1233test_corpus5678",
+        "group": "group",
+        "domain": "domain",
+        "origin": "origin",
+        "description": "description",
+        "pdf_reader": "pdf_reader",
+        "document_alignment": "document_alignment",
+        "sentence_alignment": "sentence_alignment",
+        "sentence_splitter": "sentence_splitter",
+        "autoalignment": "on"
+    }
+    rv = client.post('/create_corpus', data=post_data, follow_redirects=True)
+    xml_data = rh.get("/storage/1233test_corpus5678/"+os.environ["TESTUSER"], {"uid": os.environ["TESTUSER"]})
+    assert '<list path="/1233test_corpus5678/'+os.environ["TESTUSER"]+'">' in xml_data
+    rv = client.get('/remove_corpus?tobedeleted=1233test_corpus5678')
+    xml_data = rh.get("/storage/1233test_corpus5678/"+os.environ["TESTUSER"], {"uid": os.environ["TESTUSER"]})
+    assert 'Cannot find/read branch '+os.environ["TESTUSER"] in xml_data
+
+    rh.delete("/storage/1233test_corpus5678", {"uid": os.environ["TESTUSER"]})
+
+def test_create_group(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rh.delete("/group/1234test_group5678", {"uid": os.environ["TESTUSER"]})
+    rv = client.get('/create_group')
+    assert b'Create group' in rv.data
+    post_data = {
+        "name": "1234test_group5678",
+        "members": "mikkotest2,mikkotest5,"
+    }
+    rv = client.post('/create_group', data=post_data, follow_redirects=True)
+    assert b'Group &#34;1234test_group5678&#34; created!' in rv.data
+    rv = client.post('/create_group', data=post_data, follow_redirects=True)
+    assert b'Group &#34;1234test_group5678&#34; already exists!' in rv.data
+    rh.delete("/group/1234test_group5678", {"uid": os.environ["TESTUSER"]})
+
+def test_get_group_members(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rh.delete("/group/1234test_group5678", {"uid": os.environ["TESTUSER"]})
+    post_data = {
+        "name": "1234test_group5678",
+        "members": "mikkotest2,mikkotest5,"
+    }
+    rv = client.post('/create_group', data=post_data, follow_redirects=True)
+    members = opusrepository.get_group_members("1234test_group5678", os.environ["TESTUSER"])
+    assert members[0] == "mikkotest2" and members[1] == "mikkotest5"
+
+    rh.delete("/group/1234test_group5678", {"uid": os.environ["TESTUSER"]})
+
+def test_edit_group(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rh.delete("/group/1234test_group5678", {"uid": os.environ["TESTUSER"]})
+    post_data = {
+        "name": "1234test_group5678",
+        "members": "mikkotest2,mikkotest5,"
+    }
+    rv = client.post('/create_group', data=post_data, follow_redirects=True)
+    members = opusrepository.get_group_members("1234test_group5678", os.environ["TESTUSER"])
+    assert members[0] == "mikkotest2" and members[1] == "mikkotest5"
+    post_data["members"] = "mikkotest5,"
+    rv = client.post('/edit_group/1234test_group5678', data=post_data, follow_redirects=True)
+    members = opusrepository.get_group_members("1234test_group5678", os.environ["TESTUSER"])
+    assert b'Changes saved!' in rv.data
+    assert len(members) == 1, members[0] == "mikkotest5"
+
+    rh.delete("/group/1234test_group5678", {"uid": os.environ["TESTUSER"]})
+    
+def test_remove_group(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rh.delete("/group/1234test_group5678", {"uid": os.environ["TESTUSER"]})
+    post_data = {
+        "name": "1234test_group5678",
+        "members": "mikkotest2,mikkotest5,"
+    }
+    rv = client.post('/create_group', data=post_data, follow_redirects=True)
+    assert b'Group &#34;1234test_group5678&#34; created!' in rv.data
+    rv = client.get('/remove_group?tobedeleted=1234test_group5678')
+    xml_data = rh.get("/group/1234test_group5678", {"uid": os.environ["TESTUSER"]})
+    assert "Group '1234test_group5678' not found" in xml_data
+
+    rh.delete("/group/1234test_group5678", {"uid": os.environ["TESTUSER"]})
