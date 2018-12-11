@@ -130,7 +130,6 @@ def create_corpus():
     groups.sort()
 
     field_dict = initialize_field_dict()
-
     if request.method == "POST":
         corpusName = html.escape(request.form["name"])
 
@@ -409,13 +408,15 @@ def get_branch():
     if session:
         username = session['username']
 
+    owner = username == branch
+
     uploads = get_from_api_and_parse("/storage/"+corpusname+"/"+branch+"/uploads", {"uid": username}, "navigateDirectory")
     
     monolingual, parallel = get_from_api_and_parse("/metadata/"+corpusname+"/"+branch, {"uid": username}, "getMonolingualAndParallel")
     monolingual.sort()
     parallel.sort()
     
-    return jsonify(uploads=uploads, parallel=parallel, monolingual=monolingual)
+    return jsonify(uploads=uploads, parallel=parallel, monolingual=monolingual, owner=owner)
 
 @app.route('/get_subdirs')
 @login_required
