@@ -10,6 +10,7 @@ function update_branch() {
     $("#branch").val($("#choose-branch").val());
     $(".header-next-to-button").css("top", "");
     $(".header-button").css("display", "");
+    $("#settings").css("display", "none");
     $.getJSON(baseurl+"/get_branch", {
         corpusname: $("#corpusname").text(),
         branch: $("#choose-branch").val()
@@ -25,6 +26,7 @@ function update_branch() {
         if (data.owner) {
             $(".header-button").css("display", "inline");
             $(".header-next-to-button").css("top", "5px");
+            $("#settings").css("display", "inline");
         }
     });
 }
