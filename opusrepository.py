@@ -489,10 +489,11 @@ def upload_file():
             description = request.form['description']
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], timename))
 
-            ret = rh.upload("/storage" + path, {"uid": username}, UPLOAD_FOLDER+"/"+timename)
-
+            upload_param = {"uid": username}
             if "autoimport" in request.form.keys():
-                response = rh.put("/job"+path, {"uid": username, "run": "import"})
+                upload_param["action"] = "import"
+
+            ret = rh.upload("/storage" + path, upload_param, UPLOAD_FOLDER+"/"+timename)
 
             response = rh.put("/metadata"+path, {"uid": username, "description": html.escape(description), "direction": direction})
 
