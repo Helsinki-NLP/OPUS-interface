@@ -486,7 +486,7 @@ def test_rh_put():
 
 def test_rh_upload_and_delete():
     response = rh.upload("/storage/mikkocorpus/mikkotest/uploads/test/test.txt", {"uid": "mikkotest"}, opusrepository.UPLOAD_FOLDER+"/test.txt")
-    assert '<status code="0" location="/storage/mikkocorpus/mikkotest/uploads/test/test.txt" operation="POST" type="ok">update ok /mikkocorpus/mikkotest/uploads/test/test.txt</status>' in response
+    assert '<status code="0" location="/storage/mikkocorpus/mikkotest/uploads/test/test.txt" operation="PUT" type="ok">update ok /mikkocorpus/mikkotest/uploads/test/test.txt</status>' in response
     response = rh.get("/storage/mikkocorpus/mikkotest/uploads/test/test.txt", {"uid": "mikkotest"})
     assert '<name>test.txt</name>' in response 
     response = rh.delete("/storage/mikkocorpus/mikkotest/uploads/test/test.txt", {"uid": "mikkotest"})
