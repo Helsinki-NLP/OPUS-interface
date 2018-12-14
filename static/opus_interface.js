@@ -11,6 +11,7 @@ function update_branch() {
     $(".header-next-to-button").css("top", "");
     $(".header-button").css("display", "");
     $("#settings").css("display", "none");
+    $("#deletefile").css("display", "none");
     $.getJSON(baseurl+"/get_branch", {
         corpusname: $("#corpusname").text(),
         branch: $("#choose-branch").val()
@@ -27,6 +28,7 @@ function update_branch() {
             $(".header-button").css("display", "inline");
             $(".header-next-to-button").css("top", "5px");
             $("#settings").css("display", "inline");
+            $("#deletefile").css("display", "inline");
         }
     });
 }
