@@ -1,5 +1,6 @@
 import os
 import xml.etree.ElementTree as ET
+import io
 
 import pytest
 
@@ -745,3 +746,95 @@ def test_remove_group(client):
     assert "Group '1234test_group5678' not found" in xml_data
 
     rh.delete("/group/1234test_group5678", {"uid": os.environ["TESTUSER"]})
+
+def test_show_corpus(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rh.post("/storage/1234_test_corpus_5678/"+os.environ["TESTUSER"], {"uid": os.environ["TESTUSER"]})
+    rv = client.get('/show_corpus/1234_test_corpus_5678')
+    for item in [b'1234_test_corpus_5678', b'uploads', b'monolingual', b'parallel']:
+        assert item in rv.data
+    assert b'clone' not in rv.data
+    rh.delete("/storage/1234_test_corpus_5678/", {"uid": os.environ["TESTUSER"]})
+    rv = client.get('/show_corpus/anonymous')
+    assert b'clone' in rv.data
+
+def test_download_file(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rv = client.get('/download_file?path=%2Fmikkocorpus%2Fmikkotest%2Fxml%2Fen%2Dfi%2Fhtml%2Fajokielto%2Exml&filename=ajokielto%2Exml')
+    assert b'fromDoc="en/html/ajokielto.xml" toDoc="fi/html/ajokielto.xml"' in rv.data
+
+def test_clone_branch(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rv = client.get('/clone_branch?corpusname=anonymous&branchclone=anonymous')
+    assert b'Copied branch &#34;anonymous/anonymous&#34; to &#34;anonymous/' + os.environ["TESTUSER"].encode() in rv.data
+    rh.delete("/storage/anonymous/" + os.environ["TESTUSER"], {"uid": os.environ["TESTUSER"]})
+
+def test_search(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rv = client.get('/search?corpusname=anonymous')
+    assert b'{\n  "result": [\n    "anonymous"\n  ]\n}\n' in rv.data
+    rv = client.get('/search?corpusname=mikko')
+    assert b'{\n  "result": [\n    "mikkocorpus", \n    "mikkocorpus2", \n    "mikkocorpus3", \n    "mikkocorpus4"\n  ]\n}\n' in rv.data
+
+def test_update_metadata(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    xml_data = rh.get("/metadata/mikkocorpus/mikkotest/uploads/html.tar.gz", {"uid": os.environ["TESTUSER"]})
+    assert "<testkey>testvalue</testkey>" not in xml_data
+    rv = client.get('/update_metadata?path=/mikkocorpus/mikkotest/uploads/html.tar.gz&changes={"testkey":"testvalue"}')
+    assert b'Created/Overwrote meta data entry' in rv.data
+    xml_data = rh.get("/metadata/mikkocorpus/mikkotest/uploads/html.tar.gz", {"uid": os.environ["TESTUSER"]})
+    assert "<testkey>testvalue</testkey>" in xml_data
+    rv = client.get('/update_metadata?path=/mikkocorpus/mikkotest/uploads/html.tar.gz&changes={"testkey":""}')
+    xml_data = rh.get("/metadata/mikkocorpus/mikkotest/uploads/html.tar.gz", {"uid": os.environ["TESTUSER"]})
+    assert "<testkey>testvalue</testkey>" not in xml_data
+
+def test_edit_alignment(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rv = client.get('/edit_alignment?path=/mikkocorpus/mikkotest/xml/en-fi/html/ajokielto.xml')
+    assert b'ISA available at http://vm0081.kaj.pouta.csc.fi/isa/mikkotest/mikkocorpus' in rv.data
+
+def test_get_branch(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rv = client.get("/get_branch?branch=mikkotest&corpusname=mikkocorpus")
+    for item in [b'monolingual', b'en', b'fi', b'parallel', b'en-fi', b'uploads', b'html.tar.gz']:
+        assert item in rv.data
+
+def test_get_subdirs(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+    rv = client.get("/get_subdirs?branch=mikkotest&corpusname=mikkocorpus&subdir=/uploads")
+    assert b'"html.tar.gz", \n      "file"' in rv.data
+    rv = client.get("/get_subdirs?branch=mikkotest&corpusname=mikkocorpus&subdir=/monolingual")
+    assert b'"en-fi", \n      "dir"' in rv.data
+
+def test_upload_file(client):
+    login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
+
+    post_data = { "path": "/mikkocorpus/"+os.environ["TESTUSER"]+"/uploads/testfile.txt", "description": "" }
+    post_data["file"] = (io.BytesIO(b'content'), 'testfile.txt')
+    rv = client.post("/upload_file", data=post_data, follow_redirects=True, content_type='multipart/form-data')
+    assert b'File &#34;/mikkocorpus/'+os.environ["TESTUSER"].encode()+b'/uploads/testfile.txt&#34; already exists' in rv.data
+    rh.delete("/storage/mikkocorpus/"+os.environ["TESTUSER"]+"/uploads/testfile.txt", {"uid": os.environ["TESTUSER"]})
+
+    rv = client.get("/upload_file?corpus=mikkocorpus&branch=mikkotest")
+    assert b'Upload file' in rv.data
+    post_data = { "path": "" }
+    rv= client.post("/upload_file", data=post_data, follow_redirects=True)
+    assert b'Invalid upload path' in rv.data
+    post_data["path"] = "/mikkocorpus/testbranch/uploads//"
+    rv = client.post("/upload_file", data=post_data, follow_redirects=True)
+    assert b'Invalid branch name' in rv.data
+    post_data["path"] = "/mikkocorpus/"+os.environ["TESTUSER"]+"/uploads//"
+    post_data["description"] = ""
+    rv = client.post("/upload_file", data=post_data, follow_redirects=True)
+    assert b'No file part' in rv.data
+    post_data["path"] = "/mikkocorpus/"+os.environ["TESTUSER"]+"/uploads/testfile.txt"
+    post_data["file"] = (io.BytesIO(b'content'), '')
+    rv = client.post("/upload_file", data=post_data, follow_redirects=True, content_type='multipart/form-data')
+    assert b'No file part' in rv.data
+    post_data["file"] = (io.BytesIO(b'content'), 'testfile.txt')
+    rv = client.post("/upload_file", data=post_data, follow_redirects=True, content_type='multipart/form-data')
+    assert b'Uploaded file &#34;testfile.txt&#34; to &#34;/mikkocorpus/'+os.environ["TESTUSER"].encode()+b'/uploads/testfile.txt&#34;' in rv.data
+    post_data["file"] = (io.BytesIO(b'content'), 'testfile.exe')
+    rv = client.post("/upload_file", data=post_data, follow_redirects=True, content_type='multipart/form-data')
+    assert b'File format is not allowed' in rv.data
+
