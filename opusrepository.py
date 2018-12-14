@@ -503,7 +503,7 @@ def upload_file():
             return redirect(url_for('upload_file', corpus=corpus, branch=branch))
         else:
             flash('File format is not allowed')
-            return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, fileformat=fileformat, description=description, direction=direction, autoimport=autoimport))
+            return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, description=description, direction=direction, autoimport=autoimport))
 
     return render_template("upload_file.html", languages=iso639_1)
         
