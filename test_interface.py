@@ -403,15 +403,13 @@ def test_getFileContent():
     parser = xml_parser.XmlParser(xml_data)
     content = parser.getFileContent()
 
-    correct = '<?xml version="1.0" encoding="utf-8"?>\n'\
-                  '<letsmt version="1.0">\n'\
-                  '<p id="1">\n'\
+    correct = '<?xml version="1.0" encoding="utf-8"?>\n'+\
+                  '<letsmt version="1.0">\n'+\
+                  '<p id="1">\n'+\
                   '<s id="1">If a person is sentenced to a punishment for causing a serious traffic '+\
                   'hazard, driving while intoxicated or driving while seriously intoxicated, the court '+\
-                  'also imposes a driving ban for at most five years.</s>\n'\
+                  'also imposes a driving ban for at most five years.</s>\n'+\
                   '</p>\n'
-    print(content)
-    print(correct)
     assert content == correct
 
 def test_itemExists():
@@ -459,7 +457,6 @@ def test_rh_get_download():
         "/storage/1324_testcorpus_5768/"+os.environ["TESTUSER"]+"/xml/en/ajokielto.xml", 
         {"uid": os.environ["TESTUSER"], "action": "download", "archive": "0"}
     )
-    print(response)
     texts = [
         '<?xml version="1.0" encoding="utf-8"?>',
         '<letsmt version="1.0">',
@@ -470,20 +467,20 @@ def test_rh_get_download():
     for text in texts:
         assert text in response
 
-def test_rh_get_getFileContent():
+def test_rh_get_file_content():
     response = rh.get(
-        "/storage/1324_testcorpus_5768/"+os.environ["TESTUSER"]+"/xml/en/html/ajokielto.xml", 
+        "/storage/1324_testcorpus_5768/"+os.environ["TESTUSER"]+"/xml/en/ajokielto.xml", 
         {"uid": os.environ["TESTUSER"], "action": "cat", "to": "1"}
     )
     assert len(response.split("\n")) == 9
     response = rh.get(
-        "/storage/1324_testcorpus_5768/"+os.environ["TESTUSER"]+"/xml/en/html/ajokielto.xml", 
+        "/storage/1324_testcorpus_5768/"+os.environ["TESTUSER"]+"/xml/en/ajokielto.xml", 
         {"uid": os.environ["TESTUSER"], "action": "cat", "to": "5"}
     )
     assert len(response.split("\n")) == 13
-    assert '<s id="1">If a person is sentenced to a punishment for causing a serious traffic\
-        hazard, driving while intoxicated or driving while seriously intoxicated, the court\
-        also imposes a driving ban for at most five years.</s>' in response
+    assert '<s id="1">If a person is sentenced to a punishment for causing a serious traffic '+\
+        'hazard, driving while intoxicated or driving while seriously intoxicated, the court '+\
+        'also imposes a driving ban for at most five years.</s>' in response
 
 def test_rh_post():
     rh.post(
@@ -825,8 +822,8 @@ def test_show_corpus(client):
 def test_download_file(client):
     login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
     rv = client.get('/download_file?path=%2F1324_testcorpus_5768%2F'+os.environ["TESTUSER"]+\
-        '%2Fxml%2Fen%2Dfi%2Fhtml%2Fajokielto%2Exml&filename=ajokielto%2Exml')
-    assert b'fromDoc="en/html/ajokielto.xml" toDoc="fi/html/ajokielto.xml"' in rv.data
+        '%2Fxml%2Fen%2Dfi%2Fajokielto%2Exml&filename=ajokielto%2Exml')
+    assert b'fromDoc="en/ajokielto.xml" toDoc="fi/ajokielto.xml"' in rv.data
 
 def test_clone_branch(client):
     login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
@@ -930,8 +927,8 @@ def test_get_metadata(client):
 
 def test_get_filecontent(client):
     login(client, os.environ["TESTUSER"], os.environ["TESTPW"])
-    rv = client.get("/get_filecontent?path=/1324_testcorpus_5768/"+os.environ["TESTUSER"]+"/xml/en-fi/html/ajokielto.xml")
-    for item in [b'fromDoc=\\"en/html/ajokielto.xml\\" toDoc=\\"fi/html/ajokielto.xml\\"', b'</linkGrp>\\n</cesAlign>']:
+    rv = client.get("/get_filecontent?path=/1324_testcorpus_5768/"+os.environ["TESTUSER"]+"/xml/en-fi/ajokielto.xml")
+    for item in [b'fromDoc=\\"en/ajokielto.xml\\" toDoc=\\"fi/ajokielto.xml\\"', b'</linkGrp>\\n</cesAlign>']:
         assert item in rv.data
 
 def test_import_file(client):
