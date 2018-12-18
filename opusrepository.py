@@ -558,6 +558,8 @@ def delete_file():
 
     path = request.args.get("path", "", type=str)
     response = rh.delete("/storage"+path, {"uid": username})
+    path = path.replace("/xml/", "/tmx/")
+    rh.delete("/storage"+path, {"uid": username})
 
     return jsonify(content = response)
 
