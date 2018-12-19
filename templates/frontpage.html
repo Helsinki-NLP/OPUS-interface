@@ -4,19 +4,25 @@
 <ul id="messages">
 </ul>
 
-<div>
-  <div id="searchdiv">Search corpus: <input id="searchcorpus">
+<div id="searchdiv">
+  <span>
+    Search corpus: <input id="searchcorpus">
     <ul id="searchresult"></ul>
-  </div>
+  </span>
+</div>
+<div>
   <div style="padding: 20px; float: left">
     <b>My corpora</b>
     <form class="tooltip" style="display: inline" action="/create_corpus">
-      <input type="submit" value="+">
+      <input class="clickable-box" type="submit" value="+">
       <span class="tooltiptext">Create a new corpus</span>
     </form>
-    <ul id="corpora" style="padding-left: 0px">
+    <ul id="corpora">
       {% for corpus in corpora %}
-      <li id="corpus-li-{{ corpora.index(corpus) }}" style="line-height: 20px"><a href="/show_corpus/{{ corpus }}">{{ corpus }}</a>
+      <li id="corpus-li-{{ corpora.index(corpus) }}" class="frontpage-li">
+        <span class="clickable-box">
+        <a href="/show_corpus/{{ corpus }}">{{ corpus }}</a>
+        </span>
         <button class="remove-item-button tooltip" corpusname="{{ corpus }}" number="{{ corpora.index(corpus) }}">X
         <span class="tooltiptext" style="left: 15px">Delete corpus</span>
         </button>
@@ -27,23 +33,24 @@
   <div style="padding: 20px; float: left">
     <b>My groups</b>
     <form class="tooltip" style="display: inline" action="/create_group">
-      <input type="submit" value="+">
+      <input class="clickable-box" type="submit" value="+">
       <span class="tooltiptext">Create a new group</span>
     </form>
     <ul id="groups" style="padding-left: 0px">
       {% for group in groups %}
-        <li id="group-li-{{ groups.index(group) }}" style="line-height: 20px"><a href="/edit_group/{{ group[0] }}">{{ group[0] }}</a>
-        {% if group[1] == session.username and group[0] != session.username %}
-        <button class="remove-item-button tooltip" groupname="{{ group[0] }}" number="{{ groups.index(group) }}">X
-        <span class="tooltiptext" style="left: 15px">Delete group</span>
-        </button>
-        {% endif %}
+        <li id="group-li-{{ groups.index(group) }}" style="line-height: 20px">
+          <a href="/edit_group/{{ group[0] }}">{{ group[0] }}</a>
+          {% if group[1] == session.username and group[0] != session.username %}
+          <button class="remove-item-button tooltip" groupname="{{ group[0] }}" number="{{ groups.index(group) }}">X
+            <span class="tooltiptext" style="left: 15px">Delete group</span>
+          </button>
+          {% endif %}
         </li>
       {% endfor %}
     </ul>
   </div>
   <div style="padding: 20px; float: left">
-    <b style="line-height: 29px">My jobs</b>
+    <b>My jobs</b>
     <ul id="jobs" style="padding-left: 0px">
       {% if jobs|length == 0 %}
       You have no jobs running or in queue.
