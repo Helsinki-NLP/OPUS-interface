@@ -192,3 +192,20 @@ class XmlParser:
             if self.start == "entry":
                 return True
         return False
+
+    def parseTMX(self):
+        pair = 0
+        lang = ""
+        content = ""
+        for line in self.xmlData:
+            line = line.strip()
+            m = re.search('\<tuv xml\:\:lang\=\"(..)\"\>', line)
+            if m:
+                lang = m.group(1)
+            elif line.startswith("<seg>"):
+                line = line.replace("<seg>","").replace("</seg>","")
+                content = content+"("+lang+")>"+line+"\n\n"
+                if pair == 1:
+                    content = content + "----------------------------------------------------\n\n"
+                pair = abs(pair-1)
+        return content
