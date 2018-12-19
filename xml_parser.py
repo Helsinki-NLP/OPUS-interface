@@ -204,8 +204,8 @@ class XmlParser:
                 lang = m.group(1)
             elif line.startswith("<seg>"):
                 line = line.replace("<seg>","").replace("</seg>","")
-                content = content+"("+lang+")>"+line+"\n"
+                content = content+"("+lang+")>"+line+"\n\n"
                 if pair == 1:
-                    content = content + "----------------------------------------------------\n"
+                    content = content + "----------------------------------------------------\n\n"
                 pair = abs(pair-1)
         return content
