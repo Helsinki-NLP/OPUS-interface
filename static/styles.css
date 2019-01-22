@@ -174,3 +174,9 @@ table.borders td {
     position: absolute;
     z-index: 1
 }
+
+table#tmx-content-table td {
+    border: 2px solid grey;
+    border-radius: 5px;
+    padding: 5px;
+}

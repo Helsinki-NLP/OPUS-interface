@@ -84,7 +84,10 @@
     <td id="filedisplay-content-cell" class="filedisplay-cell content-cell" style="display: none">
       <div class="scrollable">
   <table id="file-metadata" style="padding: 20px"></table>
-  <div style="padding: 20px; word-break: normal;"><span id="file-content" style="white-space: pre-wrap;"></span></div>
+  <div style="padding: 20px; word-break: normal;">
+    <span id="file-content" style="white-space: pre-wrap;"></span>
+    <table id="tmx-content-table"></table>
+  </div>
       </div>
     </td>
   </tr>
@@ -95,6 +98,7 @@
     <td id="filedisplay-bottom-cell" class="filedisplay-cell bottom-cell" style="display:none"></td>
   </tr>
 </table>
+
 
 <table id="align-selection-table" class="borders content-table" style="display: none">
   <tr><td class="header-cell" colspan="2">
@@ -151,7 +155,6 @@
     </td>
   </tr>
 </table>
-
 <script src="{{ url_for('static', filename='jquery-3.3.1.min.js') }}"> </script>
 <script type="text/javascript" src="{{ url_for('static', filename='opus_interface.js') }}"> </script>
 {% endblock %}

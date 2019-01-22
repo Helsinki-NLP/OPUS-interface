@@ -49,6 +49,7 @@ function showMetadata(datapath) {
     $("#importfile").text("import");
     $("#downloadfile").css("display", "none");
     $("#file-metadata").text("");
+    $("#file-metadata").css("display", "block");
     $("#file-content").text("");
     $("#editmetadata").css("display", "none");
     let path = formulate_datapath(datapath, "xml");
@@ -133,8 +134,20 @@ function showFilecontent(datapath, windowid) {
     $.getJSON(baseurl+"/get_filecontent", {
         path: path
     }, function(data) {
-        $(windowid).text(data.content);
+        if (path.includes("/tmx/")) {
+            $("#tmx-content-table").css("display", "block");
+            createTMXtable(data.content);
+        } else {
+            $("#file-content").css("display", "block");
+            $(windowid).text(data.content);
+        }
     });
+}
+
+function createTMXtable(tmxdata) {
+    for (let i=0; i<tmxdata.length; i++) {
+        $("#tmx-content-table").append("<tr><td>"+tmxdata[i][0]+"</td><td>"+tmxdata[i][1]+"</td></tr>");
+    }
 }
 
 function handleImport(path, command) {
@@ -510,6 +523,10 @@ function editAlignment(path) {
 }
 
 function switchMetadataAndContent(subdir_id) {
+    $("#tmx-content-table").text("");
+    $("#file-metadata").css("display", "none");
+    $("#file-content").css("display", "none");
+    $("#tmx-content-table").css("display", "none");
     if ($("#viewfile").attr("showing") == "metadata") {
         $("#file-metadata").text("");
         $("#editmetadata").css("display", "none");
@@ -564,6 +581,7 @@ $("#choose-branch").on("change", function() {
 });
 
 $("#filedisplay-close").on("click", function() {
+    $("#tmx-content-table").css("display", "none");
     let tree = $("#filedisplay-header-cell").attr("tree");
     if (tree == "uploads") {
         showOrHideTrees("monolingual", "parallel", "", "show");
