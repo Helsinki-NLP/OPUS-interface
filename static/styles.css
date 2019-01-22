@@ -213,3 +213,9 @@ table.borders td {
     line-height: 20px;
     margin-bottom: 15px;
 }
+
+table#tmx-content-table td {
+    border: 2px solid grey;
+    border-radius: 5px;
+    padding: 5px;
+}
