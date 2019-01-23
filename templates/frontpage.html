@@ -11,45 +11,47 @@
   </span>
 </div>
 <div>
-  <div style="padding: 20px; float: left">
+  <div class="frontpage-list-div">
     <b>My corpora</b>
     <form class="tooltip" style="display: inline" action="/create_corpus">
-      <input class="clickable-box" type="submit" value="+">
+      <input style="width: 25px" class="clickable-box" type="submit" value="+">
       <span class="tooltiptext">Create a new corpus</span>
     </form>
-    <ul id="corpora">
+    <table style="margin-top: 15px;">
       {% for corpus in corpora %}
-      <li id="corpus-li-{{ corpora.index(corpus) }}" class="frontpage-li">
-        <span class="clickable-box">
-        <a href="/show_corpus/{{ corpus }}">{{ corpus }}</a>
-        </span>
-        <button class="remove-item-button tooltip" corpusname="{{ corpus }}" number="{{ corpora.index(corpus) }}">X
-        <span class="tooltiptext" style="left: 15px">Delete corpus</span>
-        </button>
-      </li>
+        <tr id="corpus-li-{{ corpora.index(corpus) }}">
+          <td><a class="clickable-box" href="/show_corpus/{{ corpus }}">{{ corpus }}</a></td>
+          <td style="padding-left: 15px">
+            <button class="remove-item-button tooltip" corpusname="{{ corpus }}" number="{{ corpora.index(corpus) }}">X
+            <span class="tooltiptext" style="left: 15px">Delete corpus</span>
+            </button>
+          </td>
+        </tr>
       {% endfor %}
-    </ul>
+    </table>
   </div>
-  <div style="padding: 20px; float: left">
+  <div class="frontpage-list-div">
     <b>My groups</b>
     <form class="tooltip" style="display: inline" action="/create_group">
-      <input class="clickable-box" type="submit" value="+">
+      <input style="width: 25px" class="clickable-box" type="submit" value="+">
       <span class="tooltiptext">Create a new group</span>
     </form>
-    <ul id="groups" style="padding-left: 0px">
+    <table style="margin-top: 15px;">
       {% for group in groups %}
-        <li id="group-li-{{ groups.index(group) }}" style="line-height: 20px">
-          <a href="/edit_group/{{ group[0] }}">{{ group[0] }}</a>
-          {% if group[1] == session.username and group[0] != session.username %}
-          <button class="remove-item-button tooltip" groupname="{{ group[0] }}" number="{{ groups.index(group) }}">X
-            <span class="tooltiptext" style="left: 15px">Delete group</span>
-          </button>
-          {% endif %}
-        </li>
+        <tr id="group-li-{{ groups.index(group) }}">
+          <td><a class="clickable-box" href="/edit_group/{{ group[0] }}">{{ group[0] }}</a></td>
+          <td style="padding-left: 15px">
+            {% if group[1] == session.username and group[0] != session.username %}
+              <button class="remove-item-button tooltip" groupname="{{ group[0] }}" number="{{ groups.index(group) }}">X
+              <span class="tooltiptext" style="left: 15px">Delete group</span>
+              </button>
+            {% endif %} 
+          </td>
+        </tr>
       {% endfor %}
-    </ul>
+    </table>
   </div>
-  <div style="padding: 20px; float: left">
+  <div class="frontpage-list-div">
     <b>My jobs</b>
     <ul id="jobs" style="padding-left: 0px">
       {% if jobs|length == 0 %}
