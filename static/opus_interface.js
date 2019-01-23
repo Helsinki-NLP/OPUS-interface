@@ -465,6 +465,7 @@ $("#find-align-candidates").on("click", function() {
 function processFile(filename, path, root) {
     $(document).on("click", "#"+path, function() {
         $("#editalignment").css("display", "none");
+        $("#tmx-content-table").css("display", "none");
         $("#filename").text(filename);
         showMetadata(path);
         $("#viewfile").text("view");
