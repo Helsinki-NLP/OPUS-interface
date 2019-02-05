@@ -27,8 +27,8 @@
 
 ## Corpus view (file system view)
 
-* make 'view' file the default when clicking on file names (view metadata as option)
-* English language names instead of lang-IDs (e.g. using https://pypi.org/project/iso-639/)
+* maybe: make 'view' file the default when clicking on file names (view metadata as option)
+* maybe: English language names instead of lang-IDs (e.g. using https://pypi.org/project/iso-639/)
 * **DONE** refresh button or clickable headers in the table (uploads/monolingual/parallel)
 * **DONE** disable 'view' for upload files (does not make sense for tar, pdf, doc, ...)
 * **DONE** possibly restrict size in 'view' to avoid loading very big files?
@@ -38,10 +38,11 @@
 
 ## Corpus settings
 
-* change default for PDF reader to 'combined'
-* change options for sentence alignment (internal = AlignPara_method) to: one-to-one,length-based,hunalign,hunalign-cautious,hunalign-bisent,hunalign-bisent-cautious
-* add 'language identification (document-level)' (internal = ImportPara_langid) with options: none,textcat,blacklist,cld,cld2,lingua,langid (default = langid)
-* add 'language identification (sentence-level)' (internal = ImportPara_langid_sent) with options: none,textcat,blacklist,cld,cld2,lingua,langid (default = langid)
+* change default for PDF reader to `combined`
+* change options for sentence alignment (internal = `AlignPara_method`) to: one-to-one,length-based,hunalign,hunalign-cautious,hunalign-bisent,hunalign-bisent-cautious
+* add 'language identification (document-level)' (internal = `ImportPara_langid`) with options: none,textcat,blacklist,cld,cld2,lingua,langid (default = langid)
+* add 'language identification (sentence-level)' (internal = `ImportPara_langid_sent`) with options: none,textcat,blacklist,cld,cld2,lingua,langid (default = langid)
+* add checkbox for 'always trust language identification' (internal = `ImportPara_trust_langid` with options on/off, default = on)
 * **DONE** remove option for automatic import
 * **DONE** PDF reader options: tika/standard/raw/layout/combined                (default = tika)
 * **DONE** document alignment options: identical-names/similar/names	       (default = identical-names)
