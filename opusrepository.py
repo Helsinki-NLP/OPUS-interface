@@ -37,10 +37,13 @@ app.secret_key = key
 previous_download = ""
 
 corpus_creation_options = {
-    "pdf_reader_options": ["tika", "standard", "raw", "layout", "combined"],
+    "pdf_reader_options": ["combined", "standard", "raw", "layout", "tika"],
     "document_alignment_options": ["identical-names", "similar-names"],
-    "sentence_alignment_options": ["one-to-one", "length-based", "hunalign", "bisent"],
-    "sentence_splitter_options": ["europarl", "lingua", "udpipe", "opennlp"]
+    "sentence_alignment_options": ["one-to-one", "length-based", "hunalign", "hunalign-cautious",
+        "hunalign-bisent", "hunalign-bisent-cautious"],
+    "sentence_splitter_options": ["europarl", "lingua", "udpipe", "opennlp"],
+    "language_identification_doc": ["none", "textcat", "blacklist", "cld", "cld2", "lingua", "langid"],
+    "language_identification_sent": ["none", "textcat", "blacklist", "cld", "cld2", "lingua", "langid"]
 }
 
 def allowed_file(filename):
@@ -109,11 +112,14 @@ def initialize_field_dict():
         "domain": ["domain", ""],
         "origin": ["origin", ""],
         "description": ["description", ""],
-        "pdf_reader": ["ImportPara_mode", "tika"],
+        "pdf_reader": ["ImportPara_mode", "combined"],
         "document_alignment": ["AlignPara_search_parallel", "identical-names"],
-        "sentence_alignment": ["AlignPara_method", "bisent"],
+        "sentence_alignment": ["AlignPara_method", "hunalign-cautious"],
         "sentence_splitter": ["ImportPara_splitter", "udpipe"],
-        "autoalignment": ["ImportPara_autoalign", "on"]
+        "autoalignment": ["ImportPara_autoalign", "on"],
+        "language_identification_doc": ["ImportPara_langid", "langid"],
+        "language_identification_sent": ["ImportPara_langid_sent", "langid"],
+        "always_trust_lang_id": ["ImportPara_trust_langid", "on"]
         #"autoparsing": ["ImportPara_autoparse", "on"],
         #"autowordalign": ["ImportPara_autowordalign", "on"]
     }
@@ -176,6 +182,7 @@ def corpus_settings(corpusname):
     groups.sort()
 
     metadata = get_from_api_and_parse("/metadata/"+html.escape(corpusname)+"/"+username, {"uid": username}, "getMetadata")
+    print(metadata)
 
     field_dict = initialize_field_dict() 
 

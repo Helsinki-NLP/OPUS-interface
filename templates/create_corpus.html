@@ -2,9 +2,9 @@
 {% block content %}
 
 {% if ftype == "create" %}
-<h3>Create Corpus</h3>
+<h3 style="margin-left: 20px">Create Corpus</h3>
 {% elif ftype == "settings" %}
-<h3>Corpus Settings</h3>
+<h3 style="margin-left: 20px">Corpus Settings</h3>
 {% endif %}
 
 <form id="corpus_form" method="post" style="padding: 20px">
@@ -37,12 +37,6 @@
     <tr>
       <td align="right">automatic alignment:</td>
       <td><input type="checkbox" name="autoalignment" {% if settings["autoalignment"][1] == "on" %}checked{% endif %}></td>
-      <td align="right"><!-- automatic parsing: --></td>
-      <td><!-- <input type="checkbox" name="autoparsing" {# if settings["autoparsing"][1] == "on" #}checked{# endif #}> --></td>
-    </tr>
-    <tr>
-      <td align="right"><!-- automatic wordalign: --></td>
-      <td><!-- <input type="checkbox" name="autowordalign" {# if settings["autowordalign"][1] == "on" #}checked{# endif #}> --></td>
     </tr>
     <tr>
       <td align="right">document alignment:</td>
@@ -81,8 +75,37 @@
       </td> 
     </tr>
     <tr>
-      <td></td>
-      <td><input type="submit" name="submit" value="{% if ftype == "create" %}Create{% elif ftype == "settings" %}Save{% endif %}"></td>
+      <td align="right">language identification <br>(document-level):</td>
+      <td>
+        <select name="language_identification_doc">
+          {% for option in corpus_creation_options["language_identification_doc"] %}
+          <option value="{{ option }}" {% if option == settings["language_identification_doc"][1] %}selected{% endif %}>
+            {{ option }}
+          </option>
+          {% endfor %}
+        </select>
+      </td>
+      <td align="right">language identification <br>(sentence-level):</td>
+      <td>
+        <select name="language_identification_sent">
+          {% for option in corpus_creation_options["language_identification_sent"] %}
+          <option value="{{ option }}" {% if option == settings["language_identification_sent"][1] %}selected{% endif %}>
+            {{ option }}
+          </option>
+          {% endfor %}
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td align="right">always trust language <br>identification:</td>
+      <td><input type="checkbox" name="always_trust_lang_id" {% if settings["always_trust_lang_id"][1] == "on" %}checked{% endif %}></td>
+    </tr>
+    <tr style="height: 40px"></tr>
+    <tr>
+    <tr>
+      <td align="right"></td>
+      <td><input type="submit" name="submit" value="{% if ftype == "create" %}Create corpus{% elif ftype == "settings" %}Save settings{% endif %}"></td>
+
     </tr>
   </table>
 </form>
