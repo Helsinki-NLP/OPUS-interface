@@ -38,11 +38,11 @@
 
 ## Corpus settings
 
-* change default for PDF reader to `combined`
-* change options for sentence alignment (internal = `AlignPara_method`) to: one-to-one,length-based,hunalign,hunalign-cautious,hunalign-bisent,hunalign-bisent-cautious
-* add 'language identification (document-level)' (internal = `ImportPara_langid`) with options: none,textcat,blacklist,cld,cld2,lingua,langid (default = langid)
-* add 'language identification (sentence-level)' (internal = `ImportPara_langid_sent`) with options: none,textcat,blacklist,cld,cld2,lingua,langid (default = langid)
-* add checkbox for 'always trust language identification' (internal = `ImportPara_trust_langid` with options on/off, default = on)
+* **DONE** change default for PDF reader to `combined`
+* **DONE** change options for sentence alignment (internal = `AlignPara_method`) to: one-to-one,length-based,hunalign,hunalign-cautious,hunalign-bisent,hunalign-bisent-cautious
+* **DONE** add 'language identification (document-level)' (internal = `ImportPara_langid`) with options: none,textcat,blacklist,cld,cld2,lingua,langid (default = langid)
+* **DONE** add 'language identification (sentence-level)' (internal = `ImportPara_langid_sent`) with options: none,textcat,blacklist,cld,cld2,lingua,langid (default = langid)
+* **DONE** add checkbox for 'always trust language identification' (internal = `ImportPara_trust_langid` with options on/off, default = on)
 * **DONE** remove option for automatic import
 * **DONE** PDF reader options: tika/standard/raw/layout/combined                (default = tika)
 * **DONE** document alignment options: identical-names/similar/names	       (default = identical-names)
