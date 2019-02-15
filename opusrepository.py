@@ -42,8 +42,8 @@ corpus_creation_options = {
     "sentence_alignment_options": ["one-to-one", "length-based", "hunalign", "hunalign-cautious",
         "hunalign-bisent", "hunalign-bisent-cautious"],
     "sentence_splitter_options": ["europarl", "lingua", "udpipe", "opennlp"],
-    "language_identification_doc": ["none", "textcat", "blacklist", "cld", "cld2", "lingua", "langid"],
-    "language_identification_sent": ["none", "textcat", "blacklist", "cld", "cld2", "lingua", "langid"]
+    "language_identification_doc": ["none", "textcat", "cld", "cld2", "lingua", "langid"],
+    "language_identification_sent": ["none", "textcat", "cld", "cld2", "lingua", "langid"]
 }
 
 def allowed_file(filename):
