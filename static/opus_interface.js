@@ -465,11 +465,12 @@ $("#find-align-candidates").on("click", function() {
 function processFile(filename, path, root) {
     $(document).on("click", "#"+path, function() {
         $("#editalignment").css("display", "none");
-        $("#tmx-content-table").css("display", "none");
+        $("#editmetadata").css("display", "none");
+        $("#file-metadata").css("display", "none");
         $("#filename").text(filename);
-        showMetadata(path);
-        $("#viewfile").text("view");
-        $("#viewfile").attr("showing", "metadata");
+        showFilecontent(path, "#file-content");
+        $("#viewfile").text("metadata");
+        $("#viewfile").attr("showing", "content");
         let subdirname = root.replace(/-_-.*/, "");
         if (subdirname == "uploads") {
             showOrHideTrees("monolingual", "parallel", "uploads", "hide");
