@@ -27,8 +27,8 @@
 
 ## Corpus view (file system view)
 
-* maybe: make 'view' file the default when clicking on file names (view metadata as option)
-* maybe: English language names instead of lang-IDs (e.g. using https://pypi.org/project/iso-639/)
+* **DONE** maybe: make 'view' file the default when clicking on file names (view metadata as option)
+* **DONE** maybe: English language names instead of lang-IDs (e.g. using https://pypi.org/project/iso-639/)
 * **DONE** refresh button or clickable headers in the table (uploads/monolingual/parallel)
 * **DONE** disable 'view' for upload files (does not make sense for tar, pdf, doc, ...)
 * **DONE** possibly restrict size in 'view' to avoid loading very big files?
