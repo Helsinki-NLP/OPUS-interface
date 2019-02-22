@@ -213,7 +213,7 @@ function subdir_to_list(directories, id_name){
     for (let i=0; i<directories.length; i++) {
         let subdir = id_name+"-_-"+directories[i][0];
         subdir = subdir.replace(/\./g, "-_DOT_-");    
-        $("#"+id_name).append('<li class="tree-list-item" id="'+subdir+'" ptype="' + directories[i][1] + '" opened="none">'+directories[i][0]+'</li>');
+        $("#"+id_name).append('<li class="tree-list-item" id="'+subdir+'" ptype="' + directories[i][1] + '" opened="none">'+directories[i][2]+'</li>');
         let ptype = directories[i][1];
         if (ptype == "dir") {
             $("#"+subdir).on("click", function() {

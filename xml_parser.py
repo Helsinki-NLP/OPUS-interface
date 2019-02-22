@@ -2,6 +2,7 @@ import xml.parsers.expat
 import xml.etree.ElementTree as ET
 import re
 import html
+from iso639 import languages
 
 class XmlParser:
 
@@ -92,9 +93,19 @@ class XmlParser:
             if self.start == "entry":
                 kind = self.attrs["kind"]
             if self.start == "name" and kind in ["dir", "file"]:
-                dirs.append([self.chara, kind])
+                dirs.append([self.chara, kind, self.chara])
                 kind = ""
         return dirs
+        
+    def isoName(self, lan):
+        try:
+            return languages.get(alpha2=lan).name
+        except:
+            return lan
+
+    def isoDirection(self, direc):
+        langs = direc.split("-")
+        return self.isoName(langs[0])+"-"+self.isoName(langs[1])
 
     def getMonolingualAndParallel(self):
         monolingual_pre = []
@@ -107,8 +118,8 @@ class XmlParser:
                 parallel_pre = self.chara.split(",")
             if monolingual_pre != [] and parallel_pre != []:
                 break
-        monolingual = [[x, "dir"] for x in monolingual_pre]
-        parallel = [[x, "dir"] for x in parallel_pre]
+        monolingual = [[x, "dir", self.isoName(x)] for x in monolingual_pre]
+        parallel = [[x, "dir", self.isoDirection(x)] for x in parallel_pre]
         return (monolingual, parallel)
 
     def recursiveMetadata(self, element):
