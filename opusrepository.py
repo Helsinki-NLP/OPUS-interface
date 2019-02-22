@@ -17,6 +17,7 @@ from urllib.parse import urlparse, urljoin
 import request_handler
 import json
 import html
+from iso639 import languages
 
 rh = request_handler.RequestHandler()
 
