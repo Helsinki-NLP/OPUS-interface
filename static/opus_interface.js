@@ -468,9 +468,15 @@ function processFile(filename, path, root) {
         $("#editmetadata").css("display", "none");
         $("#file-metadata").css("display", "none");
         $("#filename").text(filename);
-        showFilecontent(path, "#file-content");
-        $("#viewfile").text("metadata");
-        $("#viewfile").attr("showing", "content");
+        if (root.startsWith("uploads")) {
+            showMetadata(path);
+            $("#viewfile").text("view");
+            $("#viewfile").attr("showing", "metadata");
+        } else {
+            showFilecontent(path, "#file-content");
+            $("#viewfile").text("metadata");
+            $("#viewfile").attr("showing", "content");
+        }
         let subdirname = root.replace(/-_-.*/, "");
         if (subdirname == "uploads") {
             showOrHideTrees("monolingual", "parallel", "uploads", "hide");
