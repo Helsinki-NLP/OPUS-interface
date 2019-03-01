@@ -228,4 +228,5 @@ table#tmx-content-table td {
     border-radius: 5px;
     padding: 5px;
     vertical-align: top;
+    word-wrap: anywhere;
 }

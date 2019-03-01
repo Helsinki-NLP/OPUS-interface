@@ -145,6 +145,7 @@ function showFilecontent(datapath, windowid) {
 }
 
 function createTMXtable(tmxdata) {
+    $("#tmx-content-table").text("");
     for (let i=0; i<tmxdata.length; i++) {
         $("#tmx-content-table").append("<tr><td>"+tmxdata[i][0]+"</td><td>"+tmxdata[i][1]+"</td></tr>");
     }
