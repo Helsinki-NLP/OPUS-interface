@@ -211,7 +211,7 @@ class XmlParser:
         content = []
         for line in self.xmlData:
             line = line.strip()
-            m = re.search('\<tuv xml\:\:lang\=\"(..)\"\>', line)
+            m = re.search('\<tuv xml\:lang\=\"(..)\"\>', line)
             if m:
                 lang = m.group(1)
                 if curLang == "":
