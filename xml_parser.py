@@ -205,7 +205,6 @@ class XmlParser:
         return False
 
     def parseTMX(self):
-        pair = 0
         lang = ""
         curLang, line1, line2 = "", "", ""
         content = []
@@ -219,10 +218,10 @@ class XmlParser:
             elif line.startswith("<seg>"):
                 line = line.replace("<seg>","").replace("</seg>","")
                 if lang == curLang:
-                    line1 = line
+                    line1 += line + " "
                 else:
-                    line2 = line
-                if pair == 1:
-                    content.append((line1, line2))
-                pair = abs(pair-1)
+                    line2 += line + " "
+            elif line == "</tu>":
+                content.append((line1[:-1], line2[:-1]))
+                line1, line2 = "", ""
         return content
