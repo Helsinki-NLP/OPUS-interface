@@ -53,12 +53,12 @@
   </div>
   <div class="frontpage-list-div">
     <b>My jobs</b>
-    <ul id="jobs" style="padding-left: 0px">
+    <ul id="jobs" style="padding-left: 0px; text-align: left">
       {% if jobs|length == 0 %}
       You have no jobs running or in queue.
       {% else %}
         {% for job in jobs %}
-          <li id="job-li-{{ jobs.index(job) }}">
+          <li id="job-li-{{ jobs.index(job) }}" style="height: 25px">
             {{ job[0] }}, {{ job[1] }}
             <button class="remove-item-button tooltip" jobname="{{ job[0] }}" number="{{ jobs.index(job) }}">X
             <span class="tooltiptext" style="left: 15px">Cancel job</span>
