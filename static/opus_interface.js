@@ -47,7 +47,6 @@ var mdvn = 0;
 function showMetadata(datapath) {
     $("#importfile").css("display", "none");
     $("#importfile").text("import");
-    $("#downloadfile").css("display", "none");
     $("#file-metadata").text("");
     $("#file-metadata").css("display", "block");
     $("#file-content").text("");
@@ -69,8 +68,6 @@ function showMetadata(datapath) {
                 $("#importfile").text("stop importing");
             } else if (key == "status" && data.metadata[key] == "waiting in import queue" && inUploads) {
                 $("#importfile").text("cancel import");
-            } else if (!inUploads) {
-                $("#downloadfile").css("display", "inline");
             }
             let metadataid = "metadatainputid"+mdvn
             $("#file-metadata").append('<tr><td align="right" style="border: none; width: 1%; white-space: nowrap"><b>'+key+':</b></td><td style="border: none"><span class="metadatatext">'+data.metadata[key]+'</span><input id="'+metadataid+'" class="metadatainput" style="display: none" name="'+key+'" value="'+data.metadata[key]+'"></td></tr>');
@@ -473,8 +470,12 @@ function processFile(filename, path, root) {
             showMetadata(path);
             $("#viewfile").text("view");
             $("#viewfile").attr("showing", "metadata");
+            $("#downloadfile").css("display", "none");
+            $("#importfile").css("display", "inline");
         } else {
             showFilecontent(path, "#file-content");
+            $("#downloadfile").css("display", "inline");
+            $("#importfile").css("display", "none");
             $("#viewfile").text("metadata");
             $("#viewfile").attr("showing", "content");
         }
