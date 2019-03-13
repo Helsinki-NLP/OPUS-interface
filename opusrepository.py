@@ -559,7 +559,7 @@ def import_file():
         metadata = get_from_api_and_parse("/metadata"+path, {"uid": username}, "getMetadata")
         job_id = metadata["job_id"]
         response = rh.delete("/job", {"uid": username, "job_id": job_id})
-    
+
     return jsonify(content = response)
 
 @app.route('/delete_file')

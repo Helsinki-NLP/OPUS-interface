@@ -209,19 +209,20 @@ class XmlParser:
         curLang, line1, line2 = "", "", ""
         content = []
         for line in self.xmlData:
-            line = line.strip()
-            m = re.search('\<tuv xml\:lang\=\"(..)\"\>', line)
-            if m:
-                lang = m.group(1)
+            self.parseLine(line)
+            if self.start == "tuv":
+                lang = self.attrs["xml:lang"]
                 if curLang == "":
                     curLang = lang
-            elif line.startswith("<seg>"):
-                line = line.replace("<seg>","").replace("</seg>","")
+            elif self.start == "seg":
+                self.start = ""
+                line = self.chara
                 if lang == curLang:
                     line1 += line + " "
                 else:
                     line2 += line + " "
-            elif line == "</tu>":
-                content.append((line1[:-1], line2[:-1]))
+            if self.end == "tu":
+                self.end = ""
+                content.append((line1.strip(), line2.strip()))
                 line1, line2 = "", ""
         return content
