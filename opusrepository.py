@@ -587,7 +587,15 @@ def list_alignment_candidates():
     candidates = get_from_api_and_parse("/metadata/"+corpus+"/"+branch, {"uid": username, "ENDS_WITH_align-candidates": "xml", "type": "recursive", "action": "list_all"}, "getAlignCandidates")
     file_list = list(candidates.keys())
     file_list.sort()
-    return jsonify(candidates = candidates, file_list = file_list)
+    
+    candidate_list = []
+    for f in file_list:
+        source_file = f;
+        for c in candidates[f]:
+            target_file = c
+            candidate_list.append((f,c))
+
+    return jsonify(candidate_list = candidate_list)
 
 @app.route('/find_alignment_candidates')
 @login_required
