@@ -425,38 +425,58 @@ function delete_alignment_row(deleteid) {
     });
 }
 
+var candidate_list = "empty";
+var ac_index = 0;
+
 function list_alignment_candidates() {
-    $("#selected-align-files")[0].innerHTML = "";
-    $("#align-all-selected").css("display", "none");
-    $("#select-all-checkboxes").prop("checked", false);
-    $.getJSON(baseurl+"/list_alignment_candidates", {
-        corpus: $("#corpusname").text(),
-        branch: $("#choose-branch").val()
-    }, function(data) {
-        for (let i=0; i<data.file_list.length; i++) {
-            let source_file = data.file_list[i];
-            let candidates = data.candidates[source_file];
-            for (let j=0; j<candidates.length; j++) {
-                let target_file = candidates[j];
-                create_alignment_row();
-                sourcenum++;
-                targetnum++;
-                $("#source-align-cell"+sourcenum).text(source_file);
-                $("#target-align-cell"+targetnum).text(target_file);
-            }
-        }
-    });
+    if (candidate_list == "empty") {
+        $("#selected-align-files")[0].innerHTML = "";
+        $("#align-all-selected").css("display", "none");
+        $("#select-all-checkboxes").prop("checked", false);
+        $.getJSON(baseurl+"/list_alignment_candidates", {
+            corpus: $("#corpusname").text(),
+            branch: $("#choose-branch").val()
+        }, function(data) {
+            candidate_list = data.candidate_list;
+            ac_index = 0;
+            load_alignment_candidates(ac_index);
+        });
+    } 
 };
+
+function load_alignment_candidates(aci) {
+    for (let i=aci; i<candidate_list.length; i++) {
+        ac_index = i+1;
+        create_alignment_row();
+        sourcenum++;
+        targetnum++;
+        $("#source-align-cell"+sourcenum).text(candidate_list[i][0]);
+        $("#target-align-cell"+targetnum).text(candidate_list[i][1]);
+        if (i % 100 == 99) { 
+            break; 
+        }
+    }
+    if (ac_index < candidate_list.length) {
+        $("#load_more_candidates").css("display", "inline");
+    } else {
+        $("#load_more_candidates").css("display", "none");
+    }
+}
+
+$("#load_more_candidates").on("click", function() {
+    load_alignment_candidates(ac_index);
+});
 
 $("#find-align-candidates").on("click", function() {
     $("#messages")[0].innerHTML = "";
-    $("#messages").append('<li>Started finding alignment candidates...</li>');
+    $("#messages").append('<li>Finding alignment candidates...</li>');
     $.getJSON(baseurl+"/find_alignment_candidates", {
         corpus: $("#corpusname").text(),
         branch: $("#choose-branch").val()
     }, function(data) {
-        console.log(data);
+        candidate_list = "empty";
         list_alignment_candidates();
+        $("#messages")[0].innerHTML = "";
     });
 });
     
