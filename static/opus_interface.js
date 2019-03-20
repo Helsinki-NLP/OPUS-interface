@@ -30,6 +30,8 @@ function update_branch() {
             $("#settings").css("display", "inline");
             $("#deletefile").css("display", "inline");
         }
+        candidate_list = "empty";
+        list_alignment_candidates();
     });
 }
 
@@ -323,6 +325,7 @@ function processAlignment(filename, subdir_id, subdir) {
         }
         if (Math.max(sourcenum, targetnum) > linenumber) {
             create_alignment_row()
+            update_showing_number("plus");
         }
         $("#"+soutar+"-align-cell"+num).text(name);
         let sourcefile = $("#source-align-cell"+linenumber).text();
@@ -363,7 +366,7 @@ function create_alignment_row() {
 
 function align_candidates(files, deleteids) {
     $("#messages")[0].innerHTML = "";
-    $("#messages").append('<li>Started aligning files...</li>');
+    $("#messages").append('<li>Starting alignment job...</li>');
     $.getJSON(baseurl+"/align_candidates", {
         files: JSON.stringify(files)
     }, function(data) {
@@ -373,7 +376,9 @@ function align_candidates(files, deleteids) {
         }
         if ($("#selected-align-files")[0].childElementCount == 0) {
             $("#align-all-selected").css("display", "none");
+            $("#load_more_candidates").css("display", "none");
         }
+        $("#messages")[0].innerHTML = "";
     });
 }
 
@@ -404,6 +409,17 @@ $("#select-all-checkboxes").on("click", function() {
     }
 });
 
+function update_showing_number(operation) {
+    if (operation == "minus") {
+        candidate_list_length -= 1;
+        ac_index -= 1;
+    } else if (operation == "plus") {
+        candidate_list_length += 1;
+        ac_index += 1;
+    }
+    $("#showingnumber").text("("+ac_index+"/"+candidate_list_length+")");
+}
+
 function delete_alignment_row(deleteid) {
     let sourcefile = $("#source-align-cell"+deleteid).text();
     let targetfile = $("#target-align-cell"+deleteid).text();
@@ -419,6 +435,7 @@ function delete_alignment_row(deleteid) {
             targetnum += 1;
         }
         $("#selected-align"+deleteid).remove();
+        update_showing_number("minus");
         if ($("#selected-align-files")[0].childElementCount == 0) {
             $("#align-all-selected").css("display", "none");
         }
@@ -426,10 +443,12 @@ function delete_alignment_row(deleteid) {
 }
 
 var candidate_list = "empty";
+var candidate_list_length = 0;
 var ac_index = 0;
 
 function list_alignment_candidates() {
     if (candidate_list == "empty") {
+        $("#load_more_candidates").css("display", "none");
         $("#selected-align-files")[0].innerHTML = "";
         $("#align-all-selected").css("display", "none");
         $("#select-all-checkboxes").prop("checked", false);
@@ -438,6 +457,7 @@ function list_alignment_candidates() {
             branch: $("#choose-branch").val()
         }, function(data) {
             candidate_list = data.candidate_list;
+            candidate_list_length = candidate_list.length;
             ac_index = 0;
             load_alignment_candidates(ac_index);
         });
@@ -461,6 +481,7 @@ function load_alignment_candidates(aci) {
     } else {
         $("#load_more_candidates").css("display", "none");
     }
+    $("#showingnumber").text("("+ac_index+"/"+candidate_list_length+")");
 }
 
 $("#load_more_candidates").on("click", function() {
