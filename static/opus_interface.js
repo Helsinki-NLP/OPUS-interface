@@ -382,6 +382,21 @@ function align_candidates(files, deleteids) {
     });
 }
 
+$("#align-all").on("click", function() {
+    $("#messages")[0].innerHTML = "";
+    $("#messages").append('<li>Starting alignment job...</li>');
+    let files = {};
+    for (let i=0; i<candidate_list.length; i++) {
+        files[$("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+candidate_list[i][0]] = "xml/"+candidate_list[i][1];
+    }
+    $.getJSON(baseurl+"/align_candidates", {
+        files: JSON.stringify(files)
+    }, function(data) {
+        console.log(data);
+    });
+    $("#messages")[0].innerHTML = "";
+});
+
 $("#align-all-selected-button").on("click", function() {
     let files = {};
     let deleteids = []
@@ -495,6 +510,7 @@ $("#find-align-candidates").on("click", function() {
         corpus: $("#corpusname").text(),
         branch: $("#choose-branch").val()
     }, function(data) {
+        console.log(data);
         candidate_list = "empty";
         list_alignment_candidates();
         $("#messages")[0].innerHTML = "";
