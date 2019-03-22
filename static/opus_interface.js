@@ -12,6 +12,9 @@ function update_branch() {
     $(".header-button").css("display", "");
     $("#settings").css("display", "none");
     $("#deletefile").css("display", "none");
+    $("#find_status").css("display", "none");
+    $("#showingnumber").css("display", "none");
+    $("#align-files-div").css("display", "none");
     $.getJSON(baseurl+"/get_branch", {
         corpusname: $("#corpusname").text(),
         branch: $("#choose-branch").val()
@@ -472,9 +475,20 @@ function list_alignment_candidates() {
             branch: $("#choose-branch").val()
         }, function(data) {
             candidate_list = data.candidate_list;
-            candidate_list_length = candidate_list.length;
-            ac_index = 0;
-            load_alignment_candidates(ac_index);
+            if (candidate_list == "finding_alignments") {
+                $("#find_status").css("display", "block");
+                $("#align-files-div").css("display", "none");                
+                $("#find-align-candidates").css("display", "none");
+                $("#showingnumber").css("display", "none");
+            } else {
+                $("#find_status").css("display", "none");
+                $("#align-files-div").css("display", "block");               
+                $("#find-align-candidates").css("display", "block");
+                $("#showingnumber").css("display", "inline");
+                candidate_list_length = candidate_list.length;
+                ac_index = 0;
+                load_alignment_candidates(ac_index);
+            }
         });
     } 
 };
@@ -505,7 +519,10 @@ $("#load_more_candidates").on("click", function() {
 
 $("#find-align-candidates").on("click", function() {
     $("#messages")[0].innerHTML = "";
-    $("#messages").append('<li>Finding alignment candidates...</li>');
+    $("#messages").append('<li>Starting finding job...</li>');
+    $("#find-align-candidates").css("display", "none");
+    $("#align-files-div").css("display", "none");
+    $("#showingnumber").css("display", "none");
     $.getJSON(baseurl+"/find_alignment_candidates", {
         corpus: $("#corpusname").text(),
         branch: $("#choose-branch").val()
