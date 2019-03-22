@@ -303,7 +303,7 @@ def show_corpus(corpusname):
 
     branches = get_from_api_and_parse("/storage/"+html.escape(corpusname), {"uid": username}, "branchesForCorpus")
     branches.sort()
-    
+   
     clone = False
     if username not in branches:
         clone = True
@@ -583,6 +583,16 @@ def list_alignment_candidates():
 
     corpus = request.args.get("corpus", "", type=str)
     branch = request.args.get("branch", "", type=str)
+    
+    find_metadata = get_from_api_and_parse("/metadata/"+corpus+"/"+branch+"/jobs/run/xml.detect_translations.xml", {"uid": username}, "getMetadata")
+    
+    if "job_status" in find_metadata.keys() and find_metadata["job_status"] != "finished":
+        find_ready = False
+    else:
+        find_ready = True
+
+    if find_ready == False:
+        return jsonify(candidate_list = "finding_alignments")
 
     candidates = get_from_api_and_parse("/metadata/"+corpus+"/"+branch, {"uid": username, "ENDS_WITH_align-candidates": "xml", "type": "recursive", "action": "list_all"}, "getAlignCandidates")
     file_list = list(candidates.keys())
@@ -606,7 +616,7 @@ def find_alignment_candidates():
     corpus = request.args.get("corpus", "", type=str)
     branch = request.args.get("branch", "", type=str)
 
-    response = rh.put("/job/"+corpus+"/"+branch+"/xml", {"uid": username, "run": "detect_translations"})
+    response = rh.put("/job/"+corpus+"/"+branch+"/xml", {"uid": username, "run": "detect_translations", "queue": "short"})
 
     return jsonify(content = response)
     
