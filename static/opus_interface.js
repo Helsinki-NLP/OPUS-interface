@@ -476,6 +476,7 @@ function list_alignment_candidates() {
         }, function(data) {
             candidate_list = data.candidate_list;
             if (candidate_list == "finding_alignments") {
+                $("#find-instruction").css("display", "inline");
                 $("#find_status").css("display", "block");
                 $("#align-files-div").css("display", "none");                
                 $("#find-align-candidates").css("display", "none");
@@ -518,8 +519,8 @@ $("#load_more_candidates").on("click", function() {
 });
 
 $("#find-align-candidates").on("click", function() {
-    $("#messages")[0].innerHTML = "";
-    $("#messages").append('<li>Starting finding job...</li>');
+    $("#find-instruction").css("display", "none");
+    $("#find_status").css("display", "block");
     $("#find-align-candidates").css("display", "none");
     $("#align-files-div").css("display", "none");
     $("#showingnumber").css("display", "none");
