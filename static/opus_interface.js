@@ -15,6 +15,7 @@ function update_branch() {
     $("#find_status").css("display", "none");
     $("#showingnumber").css("display", "none");
     $("#align-files-div").css("display", "none");
+    $("#messages")[0].innerHTML = "";
     $.getJSON(baseurl+"/get_branch", {
         corpusname: $("#corpusname").text(),
         branch: $("#choose-branch").val()
@@ -387,7 +388,7 @@ function align_candidates(files, deleteids) {
 
 $("#align-all").on("click", function() {
     $("#messages")[0].innerHTML = "";
-    $("#messages").append('<li>Starting alignment job...</li>');
+    $("#messages").append('<li>Started alignment job...</li>');
     let files = {};
     for (let i=0; i<candidate_list.length; i++) {
         files[$("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+candidate_list[i][0]] = "xml/"+candidate_list[i][1];
@@ -397,7 +398,6 @@ $("#align-all").on("click", function() {
     }, function(data) {
         console.log(data);
     });
-    $("#messages")[0].innerHTML = "";
 });
 
 $("#align-all-selected-button").on("click", function() {
