@@ -617,6 +617,7 @@ def find_alignment_candidates():
     branch = request.args.get("branch", "", type=str)
 
     response = rh.put("/job/"+corpus+"/"+branch+"/xml", {"uid": username, "run": "detect_translations", "queue": "short"})
+    time.sleep(1)
 
     return jsonify(content = response)
     
