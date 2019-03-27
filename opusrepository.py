@@ -25,12 +25,12 @@ app = Flask(__name__)
 
 UPLOAD_FOLDER = "/home/cloud-user/uploads"
 download_folder= "/home/cloud-user/downloads"
-ALLOWED_EXTENSIONS = set(['pdf', 'doc', 'txt', 'xml', 'html', 'tar', 'gz', 'epub'])
+ALLOWED_EXTENSIONS = set(["pdf", "doc", "txt", "xml", "html", "tar", "gz", "epub"])
 
 with open(app.root_path+"/iso639-1.dat", "rb") as f:
     iso639_1 = pickle.load(f)
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 key = os.environ["SECRETKEY"]
 app.secret_key = key
@@ -48,16 +48,16 @@ corpus_creation_options = {
 }
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def login_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
-        if 'logged_in' in session:
+        if "logged_in" in session:
             return f(*args, **kwargs)
         else:
             flash("You need to login first")
-            return redirect(url_for('login_page'))
+            return redirect(url_for("login_page"))
         
     return wrap
 
@@ -87,11 +87,11 @@ def get_from_api_and_parse(path, parameters, function):
     data = parser_functions[function]()
     return data
 
-@app.route('/')
+@app.route("/")
 @login_required
 def index():
     if session:
-        username = session['username']
+        username = session["username"]
 
     corpora = get_from_api_and_parse("/metadata", {"uid": username, "owner": username, "resource-type": "branch"}, "corporaForUser")
     corpora.sort()
@@ -127,11 +127,11 @@ def initialize_field_dict():
 
     return field_dict
 
-@app.route('/create_corpus', methods=["GET", "POST"])
+@app.route("/create_corpus", methods=["GET", "POST"])
 @login_required
 def create_corpus():
     if session:
-        username = session['username']
+        username = session["username"]
 
     groups = get_from_api_and_parse("/group/"+username, {"uid": username, "action": "showinfo"}, "groupsForUser")
     groups.sort()
@@ -169,15 +169,15 @@ def create_corpus():
         response = rh.post("/metadata/"+corpusName+"/"+username, parameters)
             
         flash('Corpus "' + html.unescape(corpusName) + '" created!')
-        return redirect(url_for('show_corpus', corpusname=html.unescape(corpusName)))
+        return redirect(url_for("show_corpus", corpusname=html.unescape(corpusName)))
 
     return render_template("create_corpus.html", groups=groups, ftype="create", settings=field_dict, corpus_creation_options=corpus_creation_options)
 
-@app.route('/corpus_settings/<corpusname>', methods=["GET", "POST"])
+@app.route("/corpus_settings/<corpusname>", methods=["GET", "POST"])
 @login_required
 def corpus_settings(corpusname):
     if session:
-        username = session['username']
+        username = session["username"]
 
     groups = get_from_api_and_parse("/group/"+username, {"uid": username, "action": "showinfo"}, "groupsForUser")
     groups.sort()
@@ -204,27 +204,27 @@ def corpus_settings(corpusname):
 
         response = rh.post("/metadata/"+html.escape(corpusname)+"/"+username, parameters)
             
-        flash('Corpus settings saved!')
-        return redirect(url_for('show_corpus', corpusname=corpusname))
+        flash("Corpus settings saved!")
+        return redirect(url_for("show_corpus", corpusname=corpusname))
  
     return render_template("create_corpus.html", groups=groups, name=corpusname, settings=field_dict, ftype="settings", corpus_creation_options=corpus_creation_options)
 
-@app.route('/remove_corpus')
+@app.route("/remove_corpus")
 @login_required
 def remove_corpus():
     if session:
-        username = session['username']
+        username = session["username"]
 
     corpusname = request.args.get("tobedeleted", "", type=str)
     response = rh.delete("/storage/"+html.escape(corpusname)+"/"+username, {"uid": username})
 
     return jsonify(response=response)
 
-@app.route('/remove_group')
+@app.route("/remove_group")
 @login_required
 def remove_group():
     if session:
-        username = session['username']
+        username = session["username"]
 
     groupname = request.args.get("tobedeleted", "", type=str)
     response = rh.delete("/group/"+html.escape(groupname), {"uid": username})
@@ -239,11 +239,11 @@ def get_group_members(group, username):
     users.sort()
     return users
 
-@app.route('/create_group', methods=["GET", "POST"])
+@app.route("/create_group", methods=["GET", "POST"])
 @login_required
 def create_group():
     if session:
-        username = session['username']
+        username = session["username"]
 
     users = get_group_members("public", username)
 
@@ -253,11 +253,11 @@ def create_group():
                     
         if groupName == "" or " " in groupName or not all(ord(char) < 128 for char in groupName):
             flash("Name must be ASCII only and must not contain spaces")
-            return render_template("create_group.html", name=request.form['name'], members=members, users=users, owner=True)
+            return render_template("create_group.html", name=request.form["name"], members=members, users=users, owner=True)
 
         if get_from_api_and_parse("/group/"+groupName, {"uid": username}, "itemExists"):
             flash('Group "' + groupName + '" already exists!')
-            return render_template("create_group.html", name=request.form['name'], members=members, users=users, owner=True)
+            return render_template("create_group.html", name=request.form["name"], members=members, users=users, owner=True)
 
         response = rh.post("/group/"+groupName, {"uid": username})
         
@@ -265,15 +265,15 @@ def create_group():
             response = rh.put("/group/"+groupName+"/"+member, {"uid": username})
 
         flash('Group "' + html.unescape(groupName) + '" created!')
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
 
     return render_template("create_group.html", users=users, owner=True)
 
-@app.route('/edit_group/<groupname>', methods=["GET", "POST"])
+@app.route("/edit_group/<groupname>", methods=["GET", "POST"])
 @login_required
 def edit_group(groupname):
     if session:
-        username = session['username']
+        username = session["username"]
         
     users = get_group_members("public", username)
     current_members = get_group_members(groupname, username)
@@ -290,16 +290,16 @@ def edit_group(groupname):
         for member in members:
             response = rh.put("/group/"+groupname+"/"+member, {"uid": username})
 
-        flash('Changes saved!')
-        return redirect(url_for('edit_group', groupname=groupname))
+        flash("Changes saved!")
+        return redirect(url_for("edit_group", groupname=groupname))
 
     return render_template("create_group.html", users=users, name=groupname, members=current_members, owner=owner, edit=True)
 
-@app.route('/show_corpus/<corpusname>')
+@app.route("/show_corpus/<corpusname>")
 @login_required
 def show_corpus(corpusname):
     if session:
-        username = session['username']
+        username = session["username"]
 
     branches = get_from_api_and_parse("/storage/"+html.escape(corpusname), {"uid": username}, "branchesForCorpus")
     branches.sort()
@@ -310,11 +310,11 @@ def show_corpus(corpusname):
     
     return render_template("show_corpus.html", name=corpusname, branches=branches, clone=clone)
 
-@app.route('/download_file')
+@app.route("/download_file")
 @login_required
 def download_file():
     if session:
-        username = session['username']
+        username = session["username"]
 
     path = request.args.get("path", "", type=str)
     filename = request.args.get("filename", "", type=str)
@@ -330,11 +330,11 @@ def download_file():
         f.write(ret)
     return send_from_directory(download_folder+"/", timename, as_attachment=True, attachment_filename=filename)
         
-@app.route('/clone_branch')
+@app.route("/clone_branch")
 @login_required
 def clone_branch():
     if session:
-        username = session['username']
+        username = session["username"]
     corpusname = request.args.get("corpusname", "", type=str)
     branch = request.args.get("branchclone", "", type=str)
     path = corpusname + "/" + branch
@@ -352,11 +352,11 @@ def clone_branch():
     
     return render_template("show_corpus.html", name=corpusname, branches=branches, clone=clone)
     
-@app.route('/search')
+@app.route("/search")
 @login_required
 def search():
     if session:
-        username = session['username']
+        username = session["username"]
 
     corpusname = html.escape(request.args.get("corpusname", "", type=str))
 
@@ -377,11 +377,11 @@ def search():
 
     return jsonify(result=corpora)
 
-@app.route('/update_metadata')
+@app.route("/update_metadata")
 @login_required
 def update_metadata():
     if session:
-        username = session['username']
+        username = session["username"]
     path = request.args.get("path", "", type=str)
     metadata = request.args.get("changes", "", type=str)
     metadata = json.loads(metadata)
@@ -393,17 +393,17 @@ def update_metadata():
 
     return jsonify(response=response)
         
-@app.route('/edit_alignment')
+@app.route("/edit_alignment")
 @login_required
 def edit_alignment():
     if session:
-        username = session['username']
+        username = session["username"]
     path = request.args.get("path", "", type=str)
     response = rh.put("/job"+path, {"uid": username, "run": "setup_isa"})
 
     return jsonify(response=response, username=username)
 
-@app.route('/get_branch')
+@app.route("/get_branch")
 @login_required
 def get_branch():
     uploads = []
@@ -414,7 +414,7 @@ def get_branch():
     corpusname = request.args.get("corpusname", "", type=str)
 
     if session:
-        username = session['username']
+        username = session["username"]
 
     owner = username == branch
 
@@ -426,7 +426,7 @@ def get_branch():
     
     return jsonify(uploads=uploads, parallel=parallel, monolingual=monolingual, owner=owner)
 
-@app.route('/get_subdirs')
+@app.route("/get_subdirs")
 @login_required
 def get_subdirs():
     subdirs = []
@@ -436,7 +436,7 @@ def get_subdirs():
     subdir = request.args.get("subdir", "", type=str)
 
     if session:
-        username = session['username']
+        username = session["username"]
 
     subdir = subdir.replace("-_-", "/")
     subdir = subdir.replace("-_DOT_-", ".")
@@ -450,14 +450,14 @@ def get_subdirs():
     
     return jsonify(subdirs=subdirs)
 
-@app.route('/upload_file', methods=['GET', 'POST'])
+@app.route("/upload_file", methods=["GET", "POST"])
 @login_required
 def upload_file():
     if session:
-        username = session['username']
+        username = session["username"]
 
-    if request.method == 'POST':
-        path = request.form['path']
+    if request.method == "POST":
+        path = request.form["path"]
         m = re.search("^\/(.*?)\/(.*?)\/", path)
         if m:
             corpus = m.group(1)
@@ -470,32 +470,32 @@ def upload_file():
             return redirect(url_for("index"))
         language = "detect"
         if "language" in request.form.keys():
-            language = request.form['language']
-        description = request.form['description']
+            language = request.form["language"]
+        description = request.form["description"]
         direction = "unknown"
         autoimport = "false"
         if "direction" in request.form.keys():
             direction = request.form["direction"]
         if "autoimport" in request.form.keys():
             autoimport = "true"
-        if 'file' not in request.files:
-            flash('No file part')
+        if "file" not in request.files:
+            flash("No file part")
             return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, description=description, direction=direction, autoimport=autoimport))
-        file = request.files['file']
-        if file.filename == '':
-            flash('No selected file')
+        file = request.files["file"]
+        if file.filename == "":
+            flash("No selected file")
             return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, description=description, direction=direction, autoimport=autoimport))
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             timename = str(time.time())+"###TIME###"+filename
-            path = "/".join(request.form['path'].split("/")[:-1])+"/"+filename
+            path = "/".join(request.form["path"].split("/")[:-1])+"/"+filename
 
             if get_from_api_and_parse("/storage"+path, {"uid": username}, "itemExists"):
                 flash('File "' + path + '" already exists!')
                 return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, description=description, direction=direction, autoimport=autoimport))
 
-            description = request.form['description']
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], timename))
+            description = request.form["description"]
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], timename))
 
             upload_param = {"uid": username}
             if "autoimport" in request.form.keys():
@@ -508,18 +508,18 @@ def upload_file():
             os.remove(UPLOAD_FOLDER + "/" + timename)
             flash('Uploaded file "' + filename + '" to "' + path + '"')
 
-            return redirect(url_for('upload_file', corpus=corpus, branch=branch))
+            return redirect(url_for("upload_file", corpus=corpus, branch=branch))
         else:
-            flash('File format is not allowed')
+            flash("File format is not allowed")
             return redirect(url_for("upload_file", corpus=corpus, branch=branch, language=language, description=description, direction=direction, autoimport=autoimport))
 
     return render_template("upload_file.html", languages=iso639_1)
         
-@app.route('/get_metadata')
+@app.route("/get_metadata")
 @login_required
 def get_metadata():
     if session:
-        username = session['username']
+        username = session["username"]
 
     path = request.args.get("path", "", type=str)
 
@@ -529,11 +529,11 @@ def get_metadata():
 
     return jsonify(metadata = metadata, metadataKeys = metadataKeys, username = username)
 
-@app.route('/get_filecontent')
+@app.route("/get_filecontent")
 @login_required
 def get_filecontent():
     if session:
-        username = session['username']
+        username = session["username"]
 
     path = request.args.get("path", "", type=str)
 
@@ -545,11 +545,11 @@ def get_filecontent():
 
     return jsonify(content = content)
 
-@app.route('/import_file')
+@app.route("/import_file")
 @login_required
 def import_file():
     if session:
-        username = session['username']
+        username = session["username"]
 
     path = request.args.get("path", "", type=str)
     command = request.args.get("command", "", type=str)
@@ -562,11 +562,11 @@ def import_file():
 
     return jsonify(content = response)
 
-@app.route('/delete_file')
+@app.route("/delete_file")
 @login_required
 def delete_file():
     if session:
-        username = session['username']
+        username = session["username"]
 
     path = request.args.get("path", "", type=str)
     response = rh.delete("/storage"+path, {"uid": username})
@@ -575,11 +575,11 @@ def delete_file():
 
     return jsonify(content = response)
 
-@app.route('/list_alignment_candidates')
+@app.route("/list_alignment_candidates")
 @login_required
 def list_alignment_candidates():
     if session:
-        username = session['username']
+        username = session["username"]
 
     corpus = request.args.get("corpus", "", type=str)
     branch = request.args.get("branch", "", type=str)
@@ -607,11 +607,11 @@ def list_alignment_candidates():
 
     return jsonify(candidate_list = candidate_list)
 
-@app.route('/find_alignment_candidates')
+@app.route("/find_alignment_candidates")
 @login_required
 def find_alignment_candidates():
     if session:
-        username = session['username']
+        username = session["username"]
 
     corpus = request.args.get("corpus", "", type=str)
     branch = request.args.get("branch", "", type=str)
@@ -624,13 +624,13 @@ def find_alignment_candidates():
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+    return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 
-@app.route('/remove_alignment_candidate')
+@app.route("/remove_alignment_candidate")
 @login_required
 def remove_alignment_candidate():
     if session:
-        username = session['username']
+        username = session["username"]
 
     filename = request.args.get("filename", "", type=str)
     rm_candidate = request.args.get("rm_candidate", "", type=str)
@@ -643,11 +643,11 @@ def remove_alignment_candidate():
 
     return jsonify(content=response)
 
-@app.route('/add_alignment_candidate')
+@app.route("/add_alignment_candidate")
 @login_required
 def add_alignment_candidate():
     if session:
-        username = session['username']
+        username = session["username"]
 
     filename = request.args.get("filename", "", type=str)
     add_candidate = request.args.get("add_candidate", "", type=str)
@@ -656,11 +656,11 @@ def add_alignment_candidate():
 
     return jsonify(content=response)
 
-@app.route('/align_candidates')
+@app.route("/align_candidates")
 @login_required
 def align_candidates():
     if session:
-        username = session['username']
+        username = session["username"]
     filesdata = request.args.get("files", "", type=str)
 
     files = json.loads(filesdata);
@@ -670,24 +670,24 @@ def align_candidates():
 
     return jsonify(content=response)
 
-@app.route('/login/', methods=["GET", "POST"])
+@app.route("/login/", methods=["GET", "POST"])
 def login_page():
-    error = ''
+    error = ""
     try:
         c, conn = connection()
         if request.method == "POST":
             data = c.execute("SELECT * FROM users WHERE username = (%s)",
-                             thwart(request.form['username']))
+                             thwart(request.form["username"]))
             
-            data = c.fetchone()['password']
+            data = c.fetchone()["password"]
             
-            if sha256_crypt.verify(request.form['password'], data):
-                session['logged_in'] = True
-                session['username'] = request.form['username']
+            if sha256_crypt.verify(request.form["password"], data):
+                session["logged_in"] = True
+                session["username"] = request.form["username"]
                 
                 flash("You are now logged in")
 
-                next_url = request.args.get('next')
+                next_url = request.args.get("next")
 
                 if not is_safe_url(next_url):
                     return flask.abort(400)
@@ -706,15 +706,15 @@ def login_page():
         return render_template("login.html", error=error)
 
 class RegistrationForm(Form):
-    username = TextField('Username', [validators.Length(min=4, max=20)])
-    email = TextField('Email Address', [validators.Length(min=6, max=50)])
-    password = PasswordField('New Password', [
-        validators.Required(),
-        validators.EqualTo('confirm', message='Passwords must match')
+    username = StringField("Username", [validators.Length(min=4, max=20)])
+    email = StringField("Email Address", [validators.Length(min=6, max=50)])
+    password = PasswordField("New Password", [
+        validators.DataRequired(),
+        validators.EqualTo("confirm", message="Passwords must match")
     ])
-    confirm = PasswordField('Repeat Password')
+    confirm = PasswordField("Repeat Password")
     
-@app.route('/register/', methods=["GET", "POST"])
+@app.route("/register/", methods=["GET", "POST"])
 def register_page():
     try:
         form = RegistrationForm(request.form)
@@ -729,7 +729,7 @@ def register_page():
 
             if int(x) > 0:
                 error = "That username is already taken, please choose another"
-                return render_template('register.html', form=form, error=error)
+                return render_template("register.html", form=form, error=error)
 
             else:
                 c.execute("INSERT INTO users (username, password, email, tracking) VALUES (%s, %s, %s, %s)",
@@ -741,10 +741,10 @@ def register_page():
                 conn.close()
                 gc.collect()
 
-                session['logged_in'] = True
-                session['username'] = username
+                session["logged_in"] = True
+                session["username"] = username
 
-                return redirect(url_for('index'))
+                return redirect(url_for("index"))
 
         return render_template("register.html", form=form)
 
@@ -757,7 +757,7 @@ def logout():
     session.clear()
     flash("You have been logged out!")
     gc.collect()
-    return redirect(url_for('login_page'))
+    return redirect(url_for("login_page"))
 
-if __name__=='__main__':
+if __name__=="__main__":
     app.run()
