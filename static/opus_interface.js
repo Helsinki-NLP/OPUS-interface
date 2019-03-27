@@ -238,11 +238,24 @@ $("#searchcorpus").on("keyup", function() {
             for (let i=0; i<data.result.length; i++) {
                 $("#searchresult").append('<li><a href="/show_corpus/'+data.result[i]+'">'+data.result[i]+'</a></li>');
             }
+            if (data.result.length == 0) {
+                $("#searchresult").append("<li><i>No search results</i></li>");
+            }
             $("#searchresult").css("visibility", "visible");
         });
     } else {
         $("#searchresult").css("visibility", "hidden");
         $("#searchresult")[0].innerHTML = "";
+    }
+});
+
+$("#searchcorpus").on("focusout", function() {
+    $("#searchresult").css("visibility", "hidden");
+});
+
+$("#searchcorpus").on("focusin", function() {
+    if ($("#searchresult")[0].innerHTML != "") {
+        $("#searchresult").css("visibility", "visible");
     }
 });
 
