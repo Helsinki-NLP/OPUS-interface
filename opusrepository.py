@@ -57,7 +57,8 @@ def login_required(f):
             return f(*args, **kwargs)
         else:
             flash("You need to login first")
-            return redirect(url_for("login_page"))
+            next_url = request.url.replace(request.host_url, "")
+            return redirect(url_for("login_page", next=next_url))
         
     return wrap
 
@@ -694,7 +695,7 @@ def login_page():
                 if not is_safe_url(next_url):
                     return flask.abort(400)
 
-                return redirect(url_for("index"))
+                return redirect(next_url or url_for("index"))
             
             else:
                 error = "Invalid credentials, try again."
