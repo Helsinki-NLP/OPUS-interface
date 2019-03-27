@@ -142,9 +142,17 @@ function showFilecontent(datapath, windowid) {
             createTMXtable(data.content);
         } else {
             $("#file-content").css("display", "block");
-            $(windowid).text(data.content);
+            //$(windowid).text(data.content);
+            createDocXMLtable(data.content);
         }
     });
+}
+
+function createDocXMLtable(xmldata) {
+    $("#file-content").text("");
+    for (let i=0; i<xmldata.length; i++) {
+        $("#file-content").append("<tr><td>"+xmldata[i]+"</td></tr>");
+    }
 }
 
 function createTMXtable(tmxdata) {

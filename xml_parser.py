@@ -226,3 +226,12 @@ class XmlParser:
                 content.append((line1.strip(), line2.strip()))
                 line1, line2 = "", ""
         return content
+
+    def parseDocXML(self):
+        data = []
+        for line in self.xmlData:
+            self.parseLine(line)
+            if self.start == "s":
+                data.append(self.chara)
+                self.start = ""
+        return data

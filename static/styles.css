@@ -223,7 +223,7 @@ table.borders td {
     margin-bottom: 5px;
 }
 
-table#tmx-content-table td {
+table.clean-content td {
     border: 2px solid grey;
     border-radius: 5px;
     padding: 5px;

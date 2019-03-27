@@ -539,9 +539,11 @@ def get_filecontent():
 
     content = get_from_api_and_parse("/storage"+path, {"uid": username, "action": "cat", "to": "1000"}, "getFileContent")
 
+    parser = xml_parser.XmlParser(content.split("\n"))
     if "/tmx/" in path:
-        parser = xml_parser.XmlParser(content.split("\n"))
         content = parser.parseTMX()
+    else:
+        content = parser.parseDocXML()
 
     return jsonify(content = content)
 
