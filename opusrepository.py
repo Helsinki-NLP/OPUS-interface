@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, send_file, send_from_directory
-from wtforms import Form, BooleanField, TextField, PasswordField, validators
+from wtforms import Form, BooleanField, StringField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from pymysql import escape_string as thwart
 import gc
