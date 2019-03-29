@@ -97,8 +97,16 @@ function addMessage(message) {
         $("#messages").append("<li>"+message+"</li>");
         msg_repetition = 1;
     }
-    $("#message-div").css("display", "block");
+    $("#message-div").css({"display": "block", "height": "auto"});
 }
+
+$("#message-div").on("mouseleave", function() {
+    $("#message-div").css({"height": "29px", "overflow": "hidden"});
+});
+
+$("#message-div").on("mouseenter", function() {
+    $("#message-div").css({"height": "auto", "overflow": "visible"});
+});
 
 var inputmn = 0;
 
