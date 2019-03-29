@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Opus Repository</title>
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+<script src="{{ url_for('static', filename='jquery-3.3.1.min.js') }}"> </script>
 </head>
 
 <body>
@@ -19,16 +20,29 @@
     {% endif %}
   </ul>
 
-  {% with messages = get_flashed_messages() %}
-  {% if messages %}
-  <ul class="flashes">
-    {% for message in messages %}
-    <li>{{ message }}</li>
-    {% endfor %}
-  </ul>
-  {% endif %}
-  {% endwith %}
+  <div id="message-div">
+    <div style="float: left">
+      <ul id="flash-msgs" class="flashes">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        {% endif %}
+        {% endwith %}
+      </ul>
+
+      <ul id="messages">
+      </ul>
+    </div>
+    <button id="clear-messages" class="tooltip">X
+    <span class="tooltiptext">Clear messages</span></button>
+  </div>
+  <div style="clear: both"></div>
   
 {% block content %}{% endblock %}
+
+<script type="text/javascript" src="{{ url_for('static', filename='base.js') }}"> </script>
+
 </body>
 </html>

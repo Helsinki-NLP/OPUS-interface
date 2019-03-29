@@ -230,3 +230,18 @@ table#tmx-content-table td {
     vertical-align: top;
     word-wrap: anywhere;
 }
+
+#message-div {
+    margin: 10px;
+    border: 1px black solid;
+    border-radius: 5px;
+    float: left;
+    display: none;
+}
+
+#clear-messages {
+    float: right;
+    margin-left: 20px;
+    padding: 0px;
+}
+
