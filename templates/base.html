@@ -22,7 +22,7 @@
 
   <div id="message-div">
     <div style="float: left">
-      <ul id="flash-msgs" class="flashes">
+      <ul id="flash-msgs" class="flashes message-list">
         {% with messages = get_flashed_messages() %}
         {% if messages %}
           {% for message in messages %}
@@ -32,7 +32,7 @@
         {% endwith %}
       </ul>
 
-      <ul id="messages">
+      <ul id="messages" class="message-list">
       </ul>
     </div>
     <button id="clear-messages" class="tooltip">X
