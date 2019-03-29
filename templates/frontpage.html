@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 
-<ul id="messages">
-</ul>
-
 <div id="searchdiv">
   <span>
     Search corpus: <input id="searchcorpus">
@@ -70,6 +67,5 @@
   </div>
 </div>
 
-<script src="{{ url_for('static', filename='jquery-3.3.1.min.js') }}"> </script>
 <script type="text/javascript" src="{{ url_for('static', filename='opus_interface.js') }}"> </script>
 {% endblock %}

@@ -15,7 +15,6 @@ function update_branch() {
     $("#find_status").css("display", "none");
     $("#showingnumber").css("display", "none");
     $("#align-files-div").css("display", "none");
-    $("#messages")[0].innerHTML = "";
     $.getJSON(baseurl+"/get_branch", {
         corpusname: $("#corpusname").text(),
         branch: $("#choose-branch").val()
@@ -86,6 +85,21 @@ function showMetadata(datapath) {
     });
 }
 
+var msg_repetition = 1;
+
+function addMessage(message) {
+    last_msg = $("#messages")[0].children[$("#messages")[0].children.length-1];
+    if (last_msg && (message == last_msg.innerHTML || message+" ("+msg_repetition+")" == last_msg.innerHTML)) {
+        msg_repetition++;
+        last_msg.remove();
+        $("#messages").append("<li>"+message+" ("+msg_repetition+")</li>");
+    } else {
+        $("#messages").append("<li>"+message+"</li>");
+        msg_repetition = 1;
+    }
+    $("#message-div").css("display", "block");
+}
+
 var inputmn = 0;
 
 function editMetadata(datapath) {
@@ -117,8 +131,7 @@ function editMetadata(datapath) {
                 changes: JSON.stringify(changedMetadata),
                 path: path
             }, function(data) {
-                $("#messages")[0].innerHTML = "";
-                $("#messages").append('<li>Updated metadata for file "' + path + '"</li>');
+                addMessage('Updated metadata for file "' + path + '"');
                 showMetadata(datapath);
             });
         });
@@ -163,19 +176,18 @@ function createTMXtable(tmxdata) {
 }
 
 function handleImport(path, command) {
+    if (["import", "import again"].indexOf(command) >= 0) {
+        addMessage('Started importing file "' + path + '"');
+    } else if (command == "stop importing") {
+        addMessage('Stopped importing file "' + path + '"');
+    } else if (command == "cancel import") {
+        addMessage('Canceled import for file "' + path + '"');
+    }
     $.getJSON(baseurl+"/import_file", {
         path: path,
         command: command
     }, function(data) {
-        $("#messages")[0].innerHTML = "";
-        if (["import", "import again"].indexOf(command) >= 0) {
-            $("#messages").append('<li>Started importing file "' + path + "'</li>");
-        } else if (command == "stop importing") {
-            $("#messages").append('<li>Stopped importing file "' + path + "'</li>");
-        } else if (command == "cancel import") {
-            $("#messages").append('<li>Canceled import for file "' + path + "'</li>");
-        }
-        console.log(data.content);
+        console.log(data); 
     });
 }
 
@@ -193,8 +205,7 @@ function deleteFile(datapath, subdirname) {
         $.getJSON(baseurl+"/delete_file", {
             path: path
         }, function(data) {
-            $("#messages")[0].innerHTML = "";
-            $("#messages").append('<li>File "' + path + "' deleted</li>");
+            addMessage('File "' + path + '" deleted');
         });
         update_branch();
         if (subdirname == "uploads") {
@@ -390,12 +401,10 @@ function create_alignment_row() {
 }
 
 function align_candidates(files, deleteids) {
-    $("#messages")[0].innerHTML = "";
-    $("#messages").append('<li>Starting alignment job...</li>');
+    addMessage("Starting alignment job...");
     $.getJSON(baseurl+"/align_candidates", {
         files: JSON.stringify(files)
     }, function(data) {
-        console.log(data)
         for (let i=0; i<deleteids.length; i++) {
             $("#selected-align"+deleteids[i]).remove();
         }
@@ -403,13 +412,11 @@ function align_candidates(files, deleteids) {
             $("#align-all-selected").css("display", "none");
             $("#load_more_candidates").css("display", "none");
         }
-        $("#messages")[0].innerHTML = "";
     });
 }
 
 $("#align-all").on("click", function() {
-    $("#messages")[0].innerHTML = "";
-    $("#messages").append('<li>Started alignment job...</li>');
+    addMessage("Starting alignment job...");
     let files = {};
     for (let i=0; i<candidate_list.length; i++) {
         files[$("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+candidate_list[i][0]] = "xml/"+candidate_list[i][1];
@@ -466,7 +473,6 @@ function delete_alignment_row(deleteid) {
         filename: $("#corpusname").text()+"/"+$("#choose-branch").val()+"/xml/"+sourcefile,
         rm_candidate: "xml/"+targetfile
     }, function(data) {
-        console.log(data)
         if (sourcefile == "") {
             sourcenum += 1;
         }
@@ -549,10 +555,8 @@ $("#find-align-candidates").on("click", function() {
         corpus: $("#corpusname").text(),
         branch: $("#choose-branch").val()
     }, function(data) {
-        console.log(data);
         candidate_list = "empty";
         list_alignment_candidates();
-        $("#messages")[0].innerHTML = "";
     });
 });
     
@@ -620,8 +624,7 @@ function editAlignment(path) {
     $.getJSON(baseurl+"/edit_alignment", {
         path: formulate_datapath(path, "xml")
     }, function(data) {
-        $("#messages")[0].innerHTML = "";
-        $("#messages").append('<li>Preparing Interactive Sentence Alignment...</li>');
+        addMessage("Preparing Interactive Sentence Alignment...");
         setTimeout(function () {
             window.location.href = "http://vm1637.kaj.pouta.csc.fi/html/isa/"+data.username+"/"+$("#corpusname").text()+"/index.php";
         }, 2000);
@@ -724,10 +727,8 @@ function delete_item(tobedeleted, number, itemtype){
         $.getJSON(baseurl+"/remove_"+itemtype, {
             tobedeleted: tobedeleted
         }, function(data) {
-            console.log(data);
             $("#"+itemtype+"-li-"+number).remove();
-            $("#messages")[0].innerHTML = "";
-            $("#messages").append('<li>Deleted ' + itemtype +' "' + tobedeleted + '"</li>');
+            addMessage('Deleted ' + itemtype +' "' + tobedeleted + '"');
         });
     }
 }
