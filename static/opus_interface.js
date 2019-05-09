@@ -276,9 +276,11 @@ $("#searchcorpus").on("keyup", function() {
     }
 });
 
+/*
 $("#searchcorpus").on("focusout", function() {
     $("#searchresult").css("visibility", "hidden");
 });
+*/
 
 $("#searchcorpus").on("focusin", function() {
     if ($("#searchresult")[0].innerHTML != "") {
