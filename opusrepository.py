@@ -143,7 +143,7 @@ def create_corpus():
 
         for key in field_dict.keys():
             #if key in ["autoalignment", "autoparsing", "autowordalign"]:
-            if key == "autoalignment":
+            if key in ["autoalignment", "always_trust_lang_id"]:
                 field_dict[key][1] = "on"
                 if key not in request.form.keys():
                     field_dict[key][1] = "off"
