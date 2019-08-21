@@ -1,6 +1,6 @@
 # OPUS-interface
 
-With OPUS repository interface, one can upload parallel files in different languages, and the repository backend aligns them on sentence level.
+With OPUS repository interface, one can upload parallel files in different languages, and the repository backend aligns them on sentence level. A public instance of the interface is running at https://opus-repository.ling.helsinki.fi/.
 
 ## Home page
 
