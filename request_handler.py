@@ -13,8 +13,11 @@ class RequestHandler:
         self.s.verify = os.environ["BACKENDCA"]
         self.root_url = os.environ["BACKENDURL"]
 
-    def get(self, url, params):
+    def get(self, url, params, zipfile=False, filepath=None):
         r = self.s.get(self.root_url+url, params=params)
+        if zipfile:
+            with open(filepath, "wb") as testfile:
+                testfile.write(r.content)
         return html.unescape(r.text)
 
     def put(self, url, params):
