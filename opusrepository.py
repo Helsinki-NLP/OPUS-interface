@@ -348,10 +348,31 @@ def download_file():
     if previous_download != "":
         os.remove(download_folder+"/"+previous_download)
     previous_download = timename
-    with open(download_folder+"/"+timename, "w") as f:
+    with open(download_folder+"/"+timename, "w", encoding="utf-8") as f:
         f.write(ret)
     return send_from_directory(download_folder+"/", timename, as_attachment=True, attachment_filename=filename)
         
+@app.route("/download_zip")
+@login_required
+def download_zip():
+    if session:
+        username = session["username"]
+
+    path = request.args.get("path", "", type=str)
+    filename = request.args.get("filename", "", type=str)
+
+    timename = str(time.time())+"###TIME###"+filename
+    filepath=download_folder+"/"+timename
+    ret = rh.get("/storage"+path, {"uid": username, "action": "download"},
+        zipfile=True, filepath=filepath)
+
+    global previous_download
+    if previous_download != "":
+        os.remove(download_folder+"/"+previous_download)
+    previous_download = timename
+
+    return send_from_directory(download_folder+"/", timename, as_attachment=True, attachment_filename=filename)
+
 @app.route("/clone_branch")
 @login_required
 def clone_branch():
