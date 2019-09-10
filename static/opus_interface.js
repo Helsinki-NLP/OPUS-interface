@@ -240,6 +240,11 @@ function downloadFile(datapath, filename) {
     */
 }
 
+function downloadZipfile(datapath, filename) {
+    let path = formulate_datapath(datapath, "tmx");
+    window.location.href = baseurl+"/download_zip?path="+path+"&filename="+filename;
+}
+
 function subdir_to_list(directories, id_name){
     for (let i=0; i<directories.length; i++) {
         let subdir = id_name+"-_-"+directories[i][0];
@@ -767,6 +772,10 @@ $("#settings").on("click", function() {
 
 $("#refresh").on("click", function() {
     update_branch()
+});
+
+$("#download_corpus").on("click", function() {
+    downloadZipfile("", $("#corpusname").text()+"_"+$("#branch").val()+".zip");
 });
 
 let branchname = decodeURIComponent(window.location.search.substring(1)).split("&")[0].split("=")[1];
