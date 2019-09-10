@@ -228,6 +228,9 @@ function deleteFile(datapath, subdirname) {
 
 function downloadFile(datapath, filename) {
     let path = formulate_datapath(datapath, "tmx");
+    filename = $("#corpusname").text()+"_"+$("#branch").val()+"_"+filename
+    filename = filename.replace(/-_-/g, "_");
+    filename = filename.replace(/-_DOT_-/g, ".");
     window.location.href = baseurl+"/download_file?path="+path+"&filename="+filename;
     /*
     console.log(path, filename);
@@ -242,6 +245,9 @@ function downloadFile(datapath, filename) {
 
 function downloadZipfile(datapath, filename) {
     let path = formulate_datapath(datapath, "tmx");
+    filename = $("#corpusname").text()+"_"+$("#branch").val()+"_"+filename+".zip"
+    filename = filename.replace(/-_-/g, "_");
+    filename = filename.replace(/-_DOT_-/g, ".");
     window.location.href = baseurl+"/download_zip?path="+path+"&filename="+filename;
 }
 
@@ -249,15 +255,18 @@ function subdir_to_list(directories, id_name){
     for (let i=0; i<directories.length; i++) {
         let subdir = id_name+"-_-"+directories[i][0];
         subdir = subdir.replace(/\./g, "-_DOT_-");    
-        $("#"+id_name).append('<li class="tree-list-item" id="'+subdir+'" ptype="' + directories[i][1] + '" opened="none">'+directories[i][2]+'</li>');
+        $("#"+id_name).append('<li class="tree-list-item" id="'+subdir+'" ptype="' + directories[i][1] + '" opened="none"><span class="open-button" id="'+subdir+'__open">'+directories[i][2]+'</span><span class="download-button" id="'+subdir+'__download"><img class="download-image" src="/static/images/download.png"></img></span></li>');
         let ptype = directories[i][1];
         if (ptype == "dir") {
-            $("#"+subdir).on("click", function() {
+            $("#"+subdir+"__open").on("click", function() {
                 open_or_close(subdir);
             });
         } else if (ptype == "file"){
             processFile(directories[i][0], subdir, id_name);
         }
+        $("#"+subdir+"__download").on("click", function() {
+            downloadZipfile(subdir, subdir);
+        });
     }
 }
 
@@ -320,16 +329,22 @@ function open_subdir(subdir) {
             subdir_id = subdir_id.replace(/\./g, "-_DOT_-");
             let ptype = subdirs[i][1];
             if (ptype == "dir") {
-                subdir_list += '<li class="tree-list-item" id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none">'+subdirs[i][0]+'</li>';
-                $(document).on("click", "#"+subdir_id, function() {
+                subdir_list += '<li class="tree-list-item" id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><span class="open-button" id="'+subdir_id+'__open">'+subdirs[i][0]+'</span><span class="download-button" id="'+subdir_id+'__download"><img class="download-image" src="/static/images/download.png"></img></span></li>';
+                $(document).on("click", "#"+subdir_id+"__open", function() {
                     open_or_close(subdir_id);
+                });
+                $(document).on("click", "#"+subdir_id+"__download", function() {
+                    downloadZipfile(subdir_id, subdir_id);
                 });
             } else if (ptype == "file") {
                 if (subdir.match("^align")) {
                     subdir_list += '<li class="tree-list-item" id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><button id="'+subdir_id+'-align">+</button><span id="'+subdir_id+'-file">'+subdirs[i][0]+'</span></li>';
                     processAlignment(subdirs[i][0], subdir_id, subdir);
                 } else {
-                    subdir_list += '<li class="tree-list-item" id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none">'+subdirs[i][0]+'</li>';
+                    subdir_list += '<li class="tree-list-item" id="'+subdir_id+'" ptype="'+subdirs[i][1]+'" opened="none"><span class="open-button" id="'+subdir_id+'__open">'+subdirs[i][0]+'</span><span class="download-button" id="'+subdir_id+'__download"><img class="download-image" src="/static/images/download.png"></img></span></li>';
+                    $(document).on("click", "#"+subdir_id+"__download", function() {
+                        downloadFile(subdir_id, subdir_id);
+                    });
                     processFile(subdirs[i][0], subdir_id, subdir);
                 }
             }
@@ -576,7 +591,7 @@ $("#find-align-candidates").on("click", function() {
 });
     
 function processFile(filename, path, root) {
-    $(document).on("click", "#"+path, function() {
+    $(document).on("click", "#"+path+"__open", function() {
         $("#editalignment").css("display", "none");
         $("#editmetadata").css("display", "none");
         $("#file-metadata").css("display", "none");
@@ -585,11 +600,11 @@ function processFile(filename, path, root) {
             showMetadata(path);
             $("#viewfile").text("view");
             $("#viewfile").attr("showing", "metadata");
-            $("#downloadfile").css("display", "none");
+            //$("#downloadfile").css("display", "none");
             $("#importfile").css("display", "inline");
         } else {
             showFilecontent(path, "#file-content");
-            $("#downloadfile").css("display", "inline");
+            //$("#downloadfile").css("display", "inline");
             $("#importfile").css("display", "none");
             $("#viewfile").text("metadata");
             $("#viewfile").attr("showing", "content");
@@ -620,10 +635,12 @@ function processFile(filename, path, root) {
         $("#deletefile").on("click", function() {
             deleteFile(path, subdirname);
         });
+        /*
         $("#downloadfile").off("click");
         $("#downloadfile").on("click", function() {
             downloadFile(path, filename);
         });
+        */
         $("#editmetadata").off("click");
         $("#editmetadata").on("click", function() {
             editMetadata(path);
@@ -775,7 +792,7 @@ $("#refresh").on("click", function() {
 });
 
 $("#download_corpus").on("click", function() {
-    downloadZipfile("", $("#corpusname").text()+"_"+$("#branch").val()+".zip");
+    downloadZipfile("", "corpus");
 });
 
 let branchname = decodeURIComponent(window.location.search.substring(1)).split("&")[0].split("=")[1];
