@@ -219,7 +219,7 @@ function deleteFile(datapath, subdirname) {
 }
 
 function downloadFile(datapath, filename) {
-    let path = formulate_datapath(datapath, "tmx");
+    let path = formulate_datapath(datapath, "xml");
     filename = $("#corpusname").text()+"_"+$("#branch").val()+"_"+filename
     filename = filename.replace(/-_-/g, "_");
     filename = filename.replace(/-_DOT_-/g, ".");
@@ -236,7 +236,7 @@ function downloadFile(datapath, filename) {
 }
 
 function downloadZipfile(datapath, filename) {
-    let path = formulate_datapath(datapath, "tmx");
+    let path = formulate_datapath(datapath, "xml");
     filename = $("#corpusname").text()+"_"+$("#branch").val()+"_"+filename+".zip"
     filename = filename.replace(/-_-/g, "_");
     filename = filename.replace(/-_DOT_-/g, ".");
