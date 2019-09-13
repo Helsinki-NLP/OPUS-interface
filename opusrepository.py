@@ -1,27 +1,48 @@
+import time
+import re
+from urllib.parse import urlparse, urljoin
+import json
+import html
+import gc
+from functools import wraps
+import pickle
+import os
+import string
+from random import choice
+import datetime
+
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, send_file, send_from_directory
+from flask_mail import Mail, Message
 from wtforms import Form, BooleanField, StringField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from pymysql import escape_string as thwart
-import gc
-from dbconnect import connection
-from functools import wraps
 import sqlite3
 from sqlalchemy import create_engine
-import pickle
-import os
 from werkzeug.utils import secure_filename
-import time
-import xml_parser
-import re
-from urllib.parse import urlparse, urljoin
-import request_handler
-import json
-import html
 from iso639 import languages
+
+import xml_parser
+import request_handler
+from dbconnect import connection
 
 rh = request_handler.RequestHandler()
 
 app = Flask(__name__)
+
+euser = os.environ["EMAILUSER"]
+epass = os.environ["EMAILPASSWORD"]
+    
+mail_settings = {
+        "MAIL_SERVER": 'smtp.gmail.com',
+        "MAIL_PORT": 465,
+        "MAIL_USER_TLS": False,
+        "MAIL_USE_SSL": True,
+        "MAIL_USERNAME": euser,
+        "MAIL_PASSWORD": epass
+    }
+
+app.config.update(mail_settings)
+mail = Mail(app)
 
 UPLOAD_FOLDER = "/home/cloud-user/uploads"
 download_folder= "/home/cloud-user/downloads"
@@ -670,6 +691,90 @@ def align_candidates():
         response = rh.put("/job/"+filename, {"uid": username, "trg": files[filename], "run": "align"})
 
     return jsonify(content=response)
+
+@app.route("/forgot_password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        username = thwart(request.form["username"])
+        c, conn = connection()
+
+        data = c.execute("SELECT * FROM users WHERE username = (%s)", username)
+
+        if data == 0:
+            c.close()
+            gc.collect()
+            flash('See your email for further instructions.')
+            return redirect(url_for("login_page"))
+                    
+        email = c.fetchone()['email']
+
+        allchar = string.ascii_letters + string.digits
+        token = "".join(choice(allchar) for x in range(18))
+
+        c.execute("INSERT INTO tokens (username, token) VALUES ((%s), (%s))", (username, token))
+        conn.commit()
+
+        c.close()
+        conn.close()
+        gc.collect()
+
+        with app.app_context():
+            msg = Message(subject="Account management",
+                    sender=app.config.get("MAIL_USERNAME"),
+                    recipients=[email],
+                    body='Follow this link to reset your Fiskmö and Opus Repository account password:\n\n'+os.environ['BASEURL']+'/reset_password/'+token+'\n\nThe link will expire in 60 minutes.')
+            mail.send(msg)
+        flash('See your email for further instructions.')
+        return redirect(url_for("login_page"))
+
+    return render_template("forgot_password.html")
+
+@app.route("/reset_password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    c, conn = connection()
+
+    data = c.execute("SELECT * FROM tokens WHERE token = (%s)", token)
+
+    if data == 0:
+        flash("Invalid password reset link")
+        return redirect(url_for("index"))
+
+    values = c.fetchone()
+    date = values['timestamp']
+        
+    if datetime.datetime.now().timestamp()-date.timestamp() > 3600:
+        c.execute("DELETE FROM tokens WHERE token =(%s)", token)
+        conn.commit()
+        c.close()
+        conn.close()
+        gc.collect()
+        flash("Invalid password reset link")
+        return redirect(url_for("index"))
+
+    username = values['username']
+
+    if request.method == "POST":
+        if request.form["password"] != request.form["confirm_password"]:
+            flash("The passwords must match")
+            return redirect(url_for("reset_password", token=token))
+        elif request.form["password"] == "":
+            flash("The password cannot be empty")
+            return redirect(url_for("reset_password", token=token))
+        else:
+            password = sha256_crypt.encrypt((request.form["password"]))
+            c.execute("UPDATE users SET password = (%s) WHERE username = (%s)", (password, username))
+            c.execute("DELETE FROM tokens WHERE token =(%s)", token)
+            conn.commit()
+            c.close()
+            conn.close()
+            gc.collect()
+            flash("Password updated successfully!")
+            return redirect(url_for("login_page"))
+
+    c.close()
+    conn.close()
+    gc.collect()
+    return render_template("reset_password.html")
 
 @app.route("/login/", methods=["GET", "POST"])
 def login_page():
