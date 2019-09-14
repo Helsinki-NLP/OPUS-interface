@@ -46,7 +46,7 @@ mail = Mail(app)
 
 UPLOAD_FOLDER = "/home/cloud-user/uploads"
 download_folder= "/home/cloud-user/downloads"
-ALLOWED_EXTENSIONS = set(["pdf", "doc", "txt", "xml", "html", "tar", "gz", "epub", "zip"])
+ALLOWED_EXTENSIONS = set(["pdf", "doc", "txt", "xml", "html", "tar", "gz", "epub", "zip", "docx", "rtf"])
 
 with open(app.root_path+"/iso639-1.dat", "rb") as f:
     iso639_1 = pickle.load(f)
