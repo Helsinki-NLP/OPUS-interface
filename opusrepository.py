@@ -346,7 +346,8 @@ def download_file():
     timename = str(time.time())+"###TIME###"+filename
     global previous_download
     if previous_download != "":
-        os.remove(download_folder+"/"+previous_download)
+        if os.path.exists(download_folder+"/"+previous_download):
+            os.remove(download_folder+"/"+previous_download)
     previous_download = timename
     with open(download_folder+"/"+timename, "w", encoding="utf-8") as f:
         f.write(ret)
@@ -368,7 +369,8 @@ def download_zip():
 
     global previous_download
     if previous_download != "":
-        os.remove(download_folder+"/"+previous_download)
+        if os.path.exists(download_folder+"/"+previous_download):
+            os.remove(download_folder+"/"+previous_download)
     previous_download = timename
 
     return send_from_directory(download_folder+"/", timename, as_attachment=True, attachment_filename=filename)
