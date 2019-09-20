@@ -446,7 +446,8 @@ def edit_alignment():
     path = request.args.get("path", "", type=str)
     response = rh.put("/job"+path, {"uid": username, "run": "setup_isa"})
 
-    return jsonify(response=response, username=username)
+    return jsonify(response=response, username=username,
+        url=os.environ['BACKENDURL'][:-6].replace('https://', 'http://'))
 
 @app.route("/get_branch")
 @login_required

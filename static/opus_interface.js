@@ -658,7 +658,7 @@ function editAlignment(path) {
     }, function(data) {
         addMessage("Preparing Interactive Sentence Alignment...");
         setTimeout(function () {
-            window.location.href = "http://vm1637.kaj.pouta.csc.fi/html/isa/"+data.username+"/"+$("#corpusname").text()+"/index.php";
+            window.location.href = data.url+"/isa/"+data.username+"/"+$("#corpusname").text()+"/index.php";
         }, 2000);
     });
 }
