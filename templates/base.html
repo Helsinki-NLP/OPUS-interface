@@ -13,7 +13,7 @@
     <li class="left"><a href="/"><img class="navlia"  src="{{ url_for('static', filename='images/opus_white.png') }}" style="height: 67px; padding: 0px 0px"></a></li>
     {% if session.logged_in %}
     <li class="right"><a class="navlia" href="/logout">logout</a></li>
-    <li class="right"><a class="navlia"><span id="username">{{ session.username }}</span></a></li>
+    <li class="right"><a class="navlia" href="/userpage"><span id="username">{{ session.username }}</span></a></li>
     {% else %}
     <li class="right"><a class="navlia" href="/login">login</a></li>
     <li class="right"><a class="navlia" href="/register">register</a></li>
