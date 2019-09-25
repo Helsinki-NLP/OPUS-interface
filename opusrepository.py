@@ -583,7 +583,8 @@ def get_filecontent():
 
     path = request.args.get("path", "", type=str)
 
-    content = get_from_api_and_parse("/storage"+path, {"uid": username, "action": "cat", "to": "1000"}, "getFileContent")
+    #content = get_from_api_and_parse("/storage"+path, {"uid": username, "action": "cat", "to": "1000"}, "getFileContent")
+    content = get_from_api_and_parse("/storage"+path, {"uid": username, "action": "cat"}, "getFileContent")
 
     parser = xml_parser.XmlParser(content.split("\n"))
     if "/tmx/" in path:
