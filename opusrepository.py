@@ -10,9 +10,9 @@ import os
 import string
 from random import choice
 import datetime
+import subprocess as sp
 
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, send_file, send_from_directory
-from flask_mail import Mail, Message
 from wtforms import Form, BooleanField, StringField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from pymysql import escape_string as thwart
@@ -28,21 +28,6 @@ from dbconnect import connection
 rh = request_handler.RequestHandler()
 
 app = Flask(__name__)
-
-euser = os.environ["EMAILUSER"]
-epass = os.environ["EMAILPASSWORD"]
-    
-mail_settings = {
-        "MAIL_SERVER": 'smtp.gmail.com',
-        "MAIL_PORT": 465,
-        "MAIL_USER_TLS": False,
-        "MAIL_USE_SSL": True,
-        "MAIL_USERNAME": euser,
-        "MAIL_PASSWORD": epass
-    }
-
-app.config.update(mail_settings)
-mail = Mail(app)
 
 UPLOAD_FOLDER = "/home/cloud-user/uploads"
 download_folder= "/home/cloud-user/downloads"
@@ -770,12 +755,14 @@ def forgot_password():
         conn.close()
         gc.collect()
 
-        with app.app_context():
-            msg = Message(subject="Account management",
-                    sender=app.config.get("MAIL_USERNAME"),
-                    recipients=[email],
-                    body='Follow this link to reset your Fiskmö and Opus Repository account password:\n\n'+os.environ['BASEURL']+'/reset_password/'+token+'\n\nThe link will expire in 60 minutes.')
-            mail.send(msg)
+        body = ('Follow this link to reset your Fiskmö and Opus Repository '
+                'account password:\n\n'+os.environ['BASEURL']+
+                '/reset_password/'+token+'\n\nThe link will expire in 60 minutes.')
+
+        message = sp.Popen(['echo', '-e', 'Subject: Account management\n\n'+body+'\n'], stdout=sp.PIPE)
+        output = sp.check_output(['sendmail', '-f', 'noreply@translate.ling.helsinki.fi', email], stdin=message.stdout)
+        message.wait()
+
         flash('See your email for further instructions.')
         return redirect(url_for("login_page"))
 
