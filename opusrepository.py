@@ -583,7 +583,8 @@ def get_filecontent():
 
     path = request.args.get("path", "", type=str)
 
-    content = get_from_api_and_parse("/storage"+path, {"uid": username, "action": "cat", "to": "1000"}, "getFileContent")
+    #content = get_from_api_and_parse("/storage"+path, {"uid": username, "action": "cat", "to": "1000"}, "getFileContent")
+    content = get_from_api_and_parse("/storage"+path, {"uid": username, "action": "cat"}, "getFileContent")
 
     parser = xml_parser.XmlParser(content.split("\n"))
     if "/tmx/" in path:
@@ -717,6 +718,34 @@ def align_candidates():
         response = rh.put("/job/"+filename, {"uid": username, "trg": files[filename], "run": "align"})
 
     return jsonify(content=response)
+
+@app.route("/userpage", methods=["GET", "POST"])
+@login_required
+def user_page():
+    if session:
+        username = session["username"]
+
+    if request.method == "POST":
+        c, conn = connection()
+        data = c.execute("SELECT * FROM users WHERE username = (%s)", username)
+
+        data = c.fetchone()['password']
+                
+        if sha256_crypt.verify(request.form['current_pass'], data):
+            password = sha256_crypt.encrypt((str(request.form["new_pass"])))
+            c.execute("UPDATE users SET password = (%s) WHERE username = (%s)", (password, username))
+            conn.commit()
+
+            flash("Password changed")
+        else:
+            flash("Wrong password")
+
+        c.close()
+        conn.close()
+        gc.collect()
+        return redirect(url_for("user_page"))
+
+    return render_template("userpage.html", username=username)
 
 @app.route("/forgot_password", methods=["GET", "POST"])
 def forgot_password():
