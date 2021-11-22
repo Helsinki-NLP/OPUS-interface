@@ -206,7 +206,6 @@ def corpus_settings(corpusname):
     groups.sort()
 
     metadata = get_from_api_and_parse("/metadata/"+html.escape(corpusname)+"/"+username, {"uid": username}, "getMetadata")
-    print(metadata)
 
     field_dict = initialize_field_dict() 
 
@@ -549,7 +548,6 @@ def upload_file():
                 upload_param["action"] = "import"
 
             ret = rh.upload("/storage" + path, upload_param, UPLOAD_FOLDER+"/"+timename)
-            print(ret)
 
             response = rh.put("/metadata"+path, {"uid": username, "description": html.escape(description), "direction": direction})
 
