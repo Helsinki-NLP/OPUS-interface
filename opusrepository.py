@@ -1,4 +1,5 @@
 import time
+import subprocess as sp
 import re
 from urllib.parse import urlparse, urljoin
 import json
@@ -548,6 +549,7 @@ def upload_file():
                 upload_param["action"] = "import"
 
             ret = rh.upload("/storage" + path, upload_param, UPLOAD_FOLDER+"/"+timename)
+            print(ret)
 
             response = rh.put("/metadata"+path, {"uid": username, "description": html.escape(description), "direction": direction})
 
@@ -744,12 +746,14 @@ def forgot_password():
         conn.close()
         gc.collect()
 
-        with app.app_context():
-            msg = Message(subject="Account management",
-                    sender=app.config.get("MAIL_USERNAME"),
-                    recipients=[email],
-                    body='Follow this link to reset your Fiskmö and Opus Repository account password:\n\n'+os.environ['BASEURL']+'/reset_password/'+token+'\n\nThe link will expire in 60 minutes.')
-            mail.send(msg)
+        body = ('Follow this link to reset your Fiskmö and Opus Repository '
+            'account password:\n\n'+os.environ['BASEURL']+
+            '/reset_password/'+token+'\n\nThe link will expire in 60 minutes.')
+
+        message = sp.Popen(['echo', '-e', 'Subject: Account management\n\n'+body+'\n'], stdout=sp.PIPE)
+        output = sp.check_output(['sendmail', '-f', 'noreply@opus-repository.ling.helsinki.fi', email], stdin=message.stdout)
+        message.wait()
+
         flash('See your email for further instructions.')
         return redirect(url_for("login_page"))
 
